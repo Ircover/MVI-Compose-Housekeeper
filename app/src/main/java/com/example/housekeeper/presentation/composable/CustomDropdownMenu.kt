@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 
 @Composable
 fun <T> CustomDropdownMenu(
@@ -28,11 +29,11 @@ fun <T> CustomDropdownMenu(
     ExposedDropdownMenuBox(
         modifier = modifier,
         expanded = isExpandedState,
-        onExpandedChange = { isExpandedState = it },
+        onExpandedChange = { isExpandedState = isEnabled && it },
     ) {
         CustomTextField(
             readOnly = true,
-            value = itemFormatter(selectedItem),
+            value = TextFieldValue( itemFormatter(selectedItem)),
             onValueChange = { },
             modifier = Modifier
                 .fillMaxWidth()

@@ -10,34 +10,62 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddCircle
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.housekeeper.R
 import com.example.housekeeper.domain.Currency
 import com.example.housekeeper.domain.Product
+import com.example.housekeeper.presentation.collectState
 import com.example.housekeeper.presentation.composable.CustomDropdownMenu
 import com.example.housekeeper.presentation.composable.PriceTextField
 import com.example.housekeeper.presentation.paddingSmall
 import com.example.housekeeper.presentation.spacedVerticallyByDefault
 import com.example.housekeeper.ui.theme.HousekeeperTheme
+import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
 fun SpendCardScreen(
     modifier: Modifier = Modifier,
     spendCardViewModel: SpendCardViewModel,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
     Scaffold(
         modifier = modifier,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
     ) { innerPadding ->
-        val state = spendCardViewModel.state.collectAsState().value
+        val state = spendCardViewModel.collectState().value
+        var isProductLoadingVisible by remember { mutableStateOf(false) }
+        spendCardViewModel.collectSideEffect {
+            when(it) {
+                is SpendCardSideEffect.ChangeProductLoadingVisibility ->
+                    isProductLoadingVisible = it.isVisible
+                is SpendCardSideEffect.ShowMessage -> {
+                    snackbarHostState.showSnackbar(
+                        context.getString(it.message.textResId)
+                    )
+                }
+            }
+        }
 
         Surface(
             modifier = Modifier
@@ -47,20 +75,18 @@ fun SpendCardScreen(
         ) {
             RenderSpendCardViewModel(
                 state,
-                onPriceChanged = { newPrice ->
-                    spendCardViewModel.accept(
-                        SpendCardUIEvent.PriceChanged(newPrice)
-                    )
+                isProductLoadingVisible = isProductLoadingVisible,
+                onPriceChanged = spendCardViewModel.accept { newPrice ->
+                    SpendCardUIEvent.PriceChanged(newPrice)
                 },
-                onCurrencyChanged = { newCurrency ->
-                    spendCardViewModel.accept(
-                        SpendCardUIEvent.CurrencyChanged(newCurrency)
-                    )
+                onCurrencyChanged = spendCardViewModel.accept { newCurrency ->
+                    SpendCardUIEvent.CurrencyChanged(newCurrency)
                 },
-                onProductChanged = { newProduct ->
-                    spendCardViewModel.accept(
-                        SpendCardUIEvent.ProductChanged(newProduct)
-                    )
+                onProductChanged = spendCardViewModel.accept { newProduct ->
+                    SpendCardUIEvent.ProductChanged(newProduct)
+                },
+                onProductAddClick = spendCardViewModel.accept {
+                    SpendCardUIEvent.AddProduct
                 }
             )
         }
@@ -70,9 +96,11 @@ fun SpendCardScreen(
 @Composable
 private fun RenderSpendCardViewModel(
     state: SpendCardState,
-    onPriceChanged: (String) -> Unit,
+    isProductLoadingVisible: Boolean,
+    onPriceChanged: (TextFieldValue) -> Unit,
     onCurrencyChanged: (Currency) -> Unit,
     onProductChanged: (Product) -> Unit,
+    onProductAddClick: () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedVerticallyByDefault(),
@@ -85,7 +113,7 @@ private fun RenderSpendCardViewModel(
                 modifier = Modifier.paddingSmall(),
             )
             PriceTextField(
-                price = state.price,
+                price = state.priceFieldValue,
                 currency = state.currency,
                 onPriceChanged = onPriceChanged,
                 modifier = Modifier
@@ -119,32 +147,58 @@ private fun RenderSpendCardViewModel(
                 onItemChanged = { it?.let { notNullProduct -> onProductChanged(notNullProduct) } },
                 isEnabled = state.isProductDropdownEnabled,
             )
-            Icon(
+            IconButton(
                 modifier = Modifier.paddingSmall(),
-                imageVector = Icons.Rounded.AddCircle,
-                contentDescription = "add spending",
-            )
+                onClick = onProductAddClick,
+            ) {
+                if (isProductLoadingVisible) {
+                    CircularProgressIndicator()
+                }
+                Icon(
+                    imageVector = Icons.Rounded.AddCircle,
+                    contentDescription = "add spending",
+                )
+            }
         }
     }
 }
 
 @Preview
 @Composable
-fun PreviewSpendCardScreen() {
+fun PreviewSpendCardScreen_Default() {
+    PreviewSpendCardScreen(
+        isProductLoadingVisible = false,
+    )
+}
+
+@Preview
+@Composable
+fun PreviewSpendCardScreen_LoadingProduct() {
+    PreviewSpendCardScreen(
+        isProductLoadingVisible = true,
+    )
+}
+
+@Composable
+private fun PreviewSpendCardScreen(
+    isProductLoadingVisible: Boolean,
+) {
     HousekeeperTheme {
         Surface {
             RenderSpendCardViewModel(
                 SpendCardState(
-                    price = "100",
+                    priceFieldValue = TextFieldValue("100"),
                     currency = Currency.Ruble,
                     availableCurrencies = emptyList(),
                     isProductDropdownEnabled = false,
                     product = null,
                     availableProducts = emptyList(),
                 ),
+                isProductLoadingVisible = isProductLoadingVisible,
                 onPriceChanged = { },
                 onCurrencyChanged = { },
                 onProductChanged = { },
+                onProductAddClick = { },
             )
         }
     }

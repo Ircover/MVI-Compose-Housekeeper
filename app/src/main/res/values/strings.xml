@@ -3,4 +3,5 @@
     <string name="price">Price</string>
     <string name="product">Product</string>
     <string name="product_empty_placeholder"><![CDATA[<Nothing selected>]]></string>
+    <string name="not_implemented">Feature is not implemented yet</string>
 </resources>

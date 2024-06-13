@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.example.housekeeper.domain.Currency
@@ -14,9 +15,9 @@ import com.example.housekeeper.domain.Currency
 @Composable
 fun PriceTextField(
     modifier: Modifier,
-    price: String,
+    price: TextFieldValue,
     currency: Currency,
-    onPriceChanged: (String) -> Unit,
+    onPriceChanged: (TextFieldValue) -> Unit,
 ) {
     CustomTextField(
         value = price,

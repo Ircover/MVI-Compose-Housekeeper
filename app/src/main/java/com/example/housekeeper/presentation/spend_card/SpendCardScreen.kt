@@ -14,7 +14,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,11 +31,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.housekeeper.R
 import com.example.housekeeper.domain.Currency
 import com.example.housekeeper.domain.Product
-import com.example.housekeeper.presentation.collectState
+import com.example.housekeeper.presentation.composable.AddProductDialog
 import com.example.housekeeper.presentation.composable.CustomDropdownMenu
 import com.example.housekeeper.presentation.composable.PriceTextField
-import com.example.housekeeper.presentation.paddingSmall
-import com.example.housekeeper.presentation.spacedVerticallyByDefault
+import com.example.housekeeper.presentation.utils.CustomSnackbarHost
+import com.example.housekeeper.presentation.utils.collectState
+import com.example.housekeeper.presentation.utils.paddingSmall
+import com.example.housekeeper.presentation.utils.show
+import com.example.housekeeper.presentation.utils.spacedVerticallyByDefault
 import com.example.housekeeper.ui.theme.HousekeeperTheme
 import org.orbitmvi.orbit.compose.collectSideEffect
 
@@ -50,20 +52,20 @@ fun SpendCardScreen(
     Scaffold(
         modifier = modifier,
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            CustomSnackbarHost(hostState = snackbarHostState)
         },
     ) { innerPadding ->
         val state = spendCardViewModel.collectState().value
         var isProductLoadingVisible by remember { mutableStateOf(false) }
+        var isAddProductDialogVisible by remember { mutableStateOf(false) }
         spendCardViewModel.collectSideEffect {
             when(it) {
                 is SpendCardSideEffect.ChangeProductLoadingVisibility ->
                     isProductLoadingVisible = it.isVisible
                 is SpendCardSideEffect.ShowMessage -> {
-                    snackbarHostState.showSnackbar(
-                        context.getString(it.message.textResId)
-                    )
+                    snackbarHostState.show(context, it.message)
                 }
+                SpendCardSideEffect.ShowAddProductDialog -> isAddProductDialogVisible = true
             }
         }
 
@@ -76,6 +78,7 @@ fun SpendCardScreen(
             RenderSpendCardViewModel(
                 state,
                 isProductLoadingVisible = isProductLoadingVisible,
+                isAddProductDialogVisible = isAddProductDialogVisible,
                 onPriceChanged = spendCardViewModel.accept { newPrice ->
                     SpendCardUIEvent.PriceChanged(newPrice)
                 },
@@ -89,6 +92,15 @@ fun SpendCardScreen(
                     SpendCardUIEvent.AddProduct
                 }
             )
+            if (isAddProductDialogVisible) {
+                AddProductDialog(
+                    isLoading = false,
+                    onProductAdd = {
+
+                    },
+                    onDismissRequest = { isAddProductDialogVisible = false },
+                )
+            }
         }
     }
 }
@@ -97,6 +109,7 @@ fun SpendCardScreen(
 private fun RenderSpendCardViewModel(
     state: SpendCardState,
     isProductLoadingVisible: Boolean,
+    isAddProductDialogVisible: Boolean,
     onPriceChanged: (TextFieldValue) -> Unit,
     onCurrencyChanged: (Currency) -> Unit,
     onProductChanged: (Product) -> Unit,
@@ -195,6 +208,7 @@ private fun PreviewSpendCardScreen(
                     availableProducts = emptyList(),
                 ),
                 isProductLoadingVisible = isProductLoadingVisible,
+                isAddProductDialogVisible = false,
                 onPriceChanged = { },
                 onCurrencyChanged = { },
                 onProductChanged = { },

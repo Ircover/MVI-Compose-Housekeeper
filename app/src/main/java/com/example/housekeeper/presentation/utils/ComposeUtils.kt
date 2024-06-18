@@ -1,4 +1,4 @@
-package com.example.housekeeper.presentation
+package com.example.housekeeper.presentation.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState

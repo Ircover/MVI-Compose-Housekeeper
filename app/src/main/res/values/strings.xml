@@ -4,4 +4,7 @@
     <string name="product">Product</string>
     <string name="product_empty_placeholder"><![CDATA[<Nothing selected>]]></string>
     <string name="not_implemented">Feature is not implemented yet</string>
+    <string name="add_product_title">Add new product</string>
+    <string name="add">Add</string>
+    <string name="add_product_name_label">Product name</string>
 </resources>

@@ -2,15 +2,11 @@ package com.example.housekeeper.presentation.spend_card
 
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
-import com.example.housekeeper.R
 import com.example.housekeeper.domain.Currency
 import com.example.housekeeper.domain.Product
 import com.example.housekeeper.presentation.NavManager
-import com.example.housekeeper.presentation.UserMessage
-import com.example.housekeeper.presentation.UserMessageLevel
-import com.example.housekeeper.presentation.UserMessageShowDuration
-import kotlinx.coroutines.delay
 import org.orbitmvi.orbit.ContainerHost
+import org.orbitmvi.orbit.syntax.simple.SimpleSyntax
 import org.orbitmvi.orbit.syntax.simple.intent
 import org.orbitmvi.orbit.syntax.simple.postSideEffect
 import org.orbitmvi.orbit.syntax.simple.reduce
@@ -64,12 +60,18 @@ class SpendCardViewModel(
     }
 
     private fun addProduct() = intent {
+        postSideEffect(SpendCardSideEffect.ShowAddProductDialog)
+    }
+
+    private fun productIntentWithIndicator(
+        action: suspend SimpleSyntax<SpendCardState, SpendCardSideEffect>.() -> Unit
+    ) = intent {
         postSideEffect(SpendCardSideEffect.ChangeProductLoadingVisibility(true))
-        delay(2000)
-        postSideEffect(SpendCardSideEffect.ChangeProductLoadingVisibility(false))
-        postSideEffect(SpendCardSideEffect.ShowMessage(
-            UserMessage(R.string.not_implemented, UserMessageLevel.Error, UserMessageShowDuration.Long)
-        ))
+        try {
+            action()
+        } finally {
+            postSideEffect(SpendCardSideEffect.ChangeProductLoadingVisibility(false))
+        }
     }
 }
 

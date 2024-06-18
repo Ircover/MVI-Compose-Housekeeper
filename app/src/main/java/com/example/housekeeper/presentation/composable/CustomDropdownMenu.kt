@@ -24,12 +24,12 @@ fun <T> CustomDropdownMenu(
     onItemChanged: (T) -> Unit,
     isEnabled: Boolean = true,
 ) {
-    var isExpandedState by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(false) }
     @OptIn(ExperimentalMaterial3Api::class)
     ExposedDropdownMenuBox(
         modifier = modifier,
-        expanded = isExpandedState,
-        onExpandedChange = { isExpandedState = isEnabled && it },
+        expanded = isExpanded,
+        onExpandedChange = { isExpanded = isEnabled && it },
     ) {
         CustomTextField(
             readOnly = true,
@@ -40,14 +40,14 @@ fun <T> CustomDropdownMenu(
                 .menuAnchor(),
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
-                    expanded = isExpandedState
+                    expanded = isExpanded
                 )
             },
             enabled = isEnabled,
         )
         ExposedDropdownMenu(
-            expanded = isExpandedState,
-            onDismissRequest = { isExpandedState = false }
+            expanded = isExpanded,
+            onDismissRequest = { isExpanded = false }
         ) {
             items.forEach { item ->
                 DropdownMenuItem(
@@ -56,7 +56,7 @@ fun <T> CustomDropdownMenu(
                     },
                     onClick = {
                         onItemChanged(item)
-                        isExpandedState = false
+                        isExpanded = false
                     }
                 )
             }

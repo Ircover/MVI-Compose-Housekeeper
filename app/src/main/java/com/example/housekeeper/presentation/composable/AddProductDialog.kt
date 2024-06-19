@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import com.example.housekeeper.R
-import com.example.housekeeper.presentation.utils.MediumRoundedCornerShape
+import com.example.housekeeper.presentation.utils.mediumRoundedCornerShape
 import com.example.housekeeper.presentation.utils.paddingMedium
 import com.example.housekeeper.presentation.utils.paddingSmall
 import com.example.housekeeper.ui.theme.HousekeeperTheme
@@ -53,7 +53,7 @@ fun AddProductDialogContent(
     var result by remember { mutableStateOf(TextFieldValue()) }
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = MediumRoundedCornerShape(),
+        shape = mediumRoundedCornerShape(),
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),

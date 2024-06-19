@@ -3,7 +3,7 @@ package com.example.housekeeper.presentation.spend_card
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import com.example.housekeeper.domain.Currency
-import com.example.housekeeper.domain.Product
+import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.presentation.NavManager
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.SimpleSyntax
@@ -30,7 +30,8 @@ class SpendCardViewModel(
             is SpendCardUIEvent.PriceChanged -> setPrice(event.newValue)
             is SpendCardUIEvent.CurrencyChanged -> setCurrency(event.newValue)
             is SpendCardUIEvent.ProductChanged -> setProduct(event.newValue)
-            SpendCardUIEvent.AddProduct -> addProduct()
+            SpendCardUIEvent.AddProductClick -> addProductClick()
+            is SpendCardUIEvent.AddProduct -> addProduct(event.name)
         }
     }
 
@@ -59,8 +60,12 @@ class SpendCardViewModel(
         }
     }
 
-    private fun addProduct() = intent {
+    private fun addProductClick() = intent {
         postSideEffect(SpendCardSideEffect.ShowAddProductDialog)
+    }
+
+    private fun addProduct(name: String) = productIntentWithIndicator {
+
     }
 
     private fun productIntentWithIndicator(

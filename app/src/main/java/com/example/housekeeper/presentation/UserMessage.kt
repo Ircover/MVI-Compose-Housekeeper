@@ -14,7 +14,7 @@ enum class UserMessageLevel {
 }
 
 sealed interface UserMessageShowDuration {
-    object Short: UserMessageShowDuration
-    object Long: UserMessageShowDuration
-    object Indefinite: UserMessageShowDuration
+    data object Short: UserMessageShowDuration
+    data object Long: UserMessageShowDuration
+    data object Indefinite: UserMessageShowDuration
 }

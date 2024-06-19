@@ -23,4 +23,4 @@ fun Arrangement.spacedVerticallyByDefault() = this.spacedBy(dimensionResource(R.
 fun Modifier.transparentBackground() = this.background(transparent)
 
 @Composable
-fun MediumRoundedCornerShape() = RoundedCornerShape(dimensionResource(R.dimen.corner_medium))
+fun mediumRoundedCornerShape() = RoundedCornerShape(dimensionResource(R.dimen.corner_medium))

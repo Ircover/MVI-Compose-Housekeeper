@@ -30,7 +30,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.housekeeper.R
 import com.example.housekeeper.domain.Currency
-import com.example.housekeeper.domain.Product
+import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.presentation.composable.AddProductDialog
 import com.example.housekeeper.presentation.composable.CustomDropdownMenu
 import com.example.housekeeper.presentation.composable.PriceTextField
@@ -89,14 +89,14 @@ fun SpendCardScreen(
                     SpendCardUIEvent.ProductChanged(newProduct)
                 },
                 onProductAddClick = spendCardViewModel.accept {
-                    SpendCardUIEvent.AddProduct
+                    SpendCardUIEvent.AddProductClick
                 }
             )
             if (isAddProductDialogVisible) {
                 AddProductDialog(
                     isLoading = false,
-                    onProductAdd = {
-
+                    onProductAdd = spendCardViewModel.accept { name ->
+                        SpendCardUIEvent.AddProduct(name)
                     },
                     onDismissRequest = { isAddProductDialogVisible = false },
                 )

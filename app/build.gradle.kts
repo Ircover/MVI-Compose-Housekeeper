@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -60,8 +61,12 @@ dependencies {
     implementation(libs.orbit.core)
     implementation(libs.orbit.viewmodel)
     implementation(libs.orbit.compose)
+    implementation(libs.room.runtime)
+    ksp(libs.room.compiler)
+    implementation(libs.room.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.room.testing)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

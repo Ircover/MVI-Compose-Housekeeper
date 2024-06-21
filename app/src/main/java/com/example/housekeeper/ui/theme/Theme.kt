@@ -41,11 +41,13 @@ private val LightColorScheme = lightColorScheme(
 
 private val OnDarkCustomColorsPalette = CustomColorsPalette(
     success = Color(color = 0xFF1B5E20),
+    info = Color(color = 0xFF030064),
     error = Color(color = 0xFF580909),
 )
 
 private val OnLightCustomColorsPalette = CustomColorsPalette(
     success = Color(color = 0xFF13BD20),
+    info = Color(color = 0xFF4742F7),
     error = Color(color = 0xFFBB0606),
 )
 

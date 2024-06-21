@@ -10,10 +10,7 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -21,9 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.example.housekeeper.presentation.spend_card.SpendCardScreen
-import com.example.housekeeper.presentation.spend_card.SpendCardViewModel
 import com.example.housekeeper.presentation.spending.SpendingScreen
-import com.example.housekeeper.presentation.spending.SpendingViewModel
 import com.example.housekeeper.ui.theme.HousekeeperTheme
 
 class MainActivity : ComponentActivity() {
@@ -45,7 +40,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             addHomeGraph(
                                 modifier = Modifier.padding(innerPadding),
-                                navManager = appState.navManager,
+                                viewModelsProvider = appState.viewModelsProvider,
                             )
                         }
                     }
@@ -59,36 +54,21 @@ class MainActivity : ComponentActivity() {
 private fun rememberAppState(
     scaffoldState: ScaffoldState = rememberScaffoldState(),
     navController: NavHostController = rememberNavController()
-) = remember(scaffoldState, navController) {
-    AppState(scaffoldState, navController)
+): AppState {
+    val context = LocalContext.current
+    return remember(scaffoldState, navController) {
+        AppState(context, scaffoldState, navController)
+    }
 }
 
 fun NavGraphBuilder.addHomeGraph(
     modifier: Modifier,
-    navManager: NavManager,
+    viewModelsProvider: ViewModelsProvider,
 ) {
     composable(MainDestinations.SPENDING) {
-        SpendingScreen(modifier, spendingViewModel = spendingViewModel(navManager))
+        SpendingScreen(modifier, spendingViewModel = viewModelsProvider.get())
     }
     composable(MainDestinations.SPEND_CARD) {
-        SpendCardScreen(modifier, spendCardViewModel = spendCardViewModel(navManager))
+        SpendCardScreen(modifier, spendCardViewModel = viewModelsProvider.get())
     }
 }
-
-@Composable
-inline fun <reified T: ViewModel> spendingViewModel(navManager: NavManager) = viewModel<T>(
-    factory = viewModelFactory {
-        initializer {
-            SpendingViewModel(navManager)
-        }
-    }
-)
-
-@Composable
-inline fun <reified T: ViewModel> spendCardViewModel(navManager: NavManager) = viewModel<T>(
-    factory = viewModelFactory {
-        initializer {
-            SpendCardViewModel(navManager)
-        }
-    }
-)

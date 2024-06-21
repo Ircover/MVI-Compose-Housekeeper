@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -21,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,14 +61,20 @@ fun SpendCardScreen(
         val state = spendCardViewModel.collectState().value
         var isProductLoadingVisible by remember { mutableStateOf(false) }
         var isAddProductDialogVisible by remember { mutableStateOf(false) }
+        var isAddProductDialogLoading by remember { mutableStateOf(false) }
+        val coroutineScope = rememberCoroutineScope()
+
         spendCardViewModel.collectSideEffect {
             when(it) {
                 is SpendCardSideEffect.ChangeProductLoadingVisibility ->
                     isProductLoadingVisible = it.isVisible
                 is SpendCardSideEffect.ShowMessage -> {
-                    snackbarHostState.show(context, it.message)
+                    snackbarHostState.show(context, coroutineScope, it.message)
                 }
                 SpendCardSideEffect.ShowAddProductDialog -> isAddProductDialogVisible = true
+                SpendCardSideEffect.HideAddProductDialog -> isAddProductDialogVisible = false
+                is SpendCardSideEffect.ChangeAddProductDialogLoading ->
+                    isAddProductDialogLoading = it.isLoading
             }
         }
 
@@ -78,7 +87,6 @@ fun SpendCardScreen(
             RenderSpendCardViewModel(
                 state,
                 isProductLoadingVisible = isProductLoadingVisible,
-                isAddProductDialogVisible = isAddProductDialogVisible,
                 onPriceChanged = spendCardViewModel.accept { newPrice ->
                     SpendCardUIEvent.PriceChanged(newPrice)
                 },
@@ -90,11 +98,14 @@ fun SpendCardScreen(
                 },
                 onProductAddClick = spendCardViewModel.accept {
                     SpendCardUIEvent.AddProductClick
-                }
+                },
+                onProductDeleteClick = spendCardViewModel.accept { product ->
+                    SpendCardUIEvent.DeleteProductClick(product)
+                },
             )
             if (isAddProductDialogVisible) {
                 AddProductDialog(
-                    isLoading = false,
+                    isLoading = isAddProductDialogLoading,
                     onProductAdd = spendCardViewModel.accept { name ->
                         SpendCardUIEvent.AddProduct(name)
                     },
@@ -109,11 +120,11 @@ fun SpendCardScreen(
 private fun RenderSpendCardViewModel(
     state: SpendCardState,
     isProductLoadingVisible: Boolean,
-    isAddProductDialogVisible: Boolean,
     onPriceChanged: (TextFieldValue) -> Unit,
     onCurrencyChanged: (Currency) -> Unit,
     onProductChanged: (Product) -> Unit,
     onProductAddClick: () -> Unit,
+    onProductDeleteClick: (Product) -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedVerticallyByDefault(),
@@ -159,7 +170,26 @@ private fun RenderSpendCardViewModel(
                 itemFormatter = { it?.name ?: stringResource(R.string.product_empty_placeholder) },
                 onItemChanged = { it?.let { notNullProduct -> onProductChanged(notNullProduct) } },
                 isEnabled = state.isProductDropdownEnabled,
-            )
+            ) { product ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .weight(1f)
+                            .paddingSmall(),
+                        text = product?.name ?: stringResource(R.string.product_empty_placeholder),
+                    )
+                    product?.let {
+                        IconButton(onClick = {
+                            onProductDeleteClick(product)
+                        }) {
+                            Icon(Icons.Filled.Delete, contentDescription = null)
+                        }
+                    }
+                }
+            }
             IconButton(
                 modifier = Modifier.paddingSmall(),
                 onClick = onProductAddClick,
@@ -179,9 +209,7 @@ private fun RenderSpendCardViewModel(
 @Preview
 @Composable
 fun PreviewSpendCardScreen_Default() {
-    PreviewSpendCardScreen(
-        isProductLoadingVisible = false,
-    )
+    PreviewSpendCardScreen()
 }
 
 @Preview
@@ -194,7 +222,7 @@ fun PreviewSpendCardScreen_LoadingProduct() {
 
 @Composable
 private fun PreviewSpendCardScreen(
-    isProductLoadingVisible: Boolean,
+    isProductLoadingVisible: Boolean = false,
 ) {
     HousekeeperTheme {
         Surface {
@@ -208,11 +236,11 @@ private fun PreviewSpendCardScreen(
                     availableProducts = emptyList(),
                 ),
                 isProductLoadingVisible = isProductLoadingVisible,
-                isAddProductDialogVisible = false,
                 onPriceChanged = { },
                 onCurrencyChanged = { },
                 onProductChanged = { },
                 onProductAddClick = { },
+                onProductDeleteClick = { },
             )
         }
     }

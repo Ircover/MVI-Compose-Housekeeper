@@ -10,6 +10,7 @@ data class UserMessage(
 
 enum class UserMessageLevel {
     Success,
+    Info,
     Error,
 }
 

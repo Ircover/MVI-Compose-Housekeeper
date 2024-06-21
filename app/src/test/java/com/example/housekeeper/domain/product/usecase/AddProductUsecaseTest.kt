@@ -1,5 +1,6 @@
 package com.example.housekeeper.domain.product.usecase
 
+import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.domain.product.repository.ProductRepository
 import com.example.housekeeper.utils.anyObject
 import kotlinx.coroutines.runBlocking
@@ -25,12 +26,13 @@ class AddProductUsecaseTest {
     @Test
     fun invoke_default(): Unit = runBlocking {
         val name = "testName"
+        val product = Product(name)
         whenever(productRepository.hasProduct(name)).thenReturn(false)
-        whenever(productRepository.addProduct(anyObject())).thenReturn(Result.success(Unit))
+        whenever(productRepository.addProduct(anyObject())).thenReturn(Result.success(product))
 
         val result = sut.invoke(name)
 
-        assertEquals("Не тот результат", AddProductResult.Success, result)
+        assertEquals("Не тот результат", AddProductResult.Success(product), result)
         verify(productRepository).addProduct(name)
     }
 

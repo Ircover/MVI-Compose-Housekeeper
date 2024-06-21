@@ -11,4 +11,5 @@ sealed interface SpendCardUIEvent : UIEvent {
     class ProductChanged(val newValue: Product) : SpendCardUIEvent
     data object AddProductClick : SpendCardUIEvent
     class AddProduct(val name: String) : SpendCardUIEvent
+    data class DeleteProductClick(val product: Product) : SpendCardUIEvent
 }

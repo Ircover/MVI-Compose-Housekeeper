@@ -1,5 +1,6 @@
 package com.example.housekeeper.data.product
 
+import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.utils.anyObject
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -48,7 +49,7 @@ class ProductRepositoryImplTest {
 
         val result = sut.addProduct(name)
 
-        assertEquals("Не тот результат", Result.success(Unit), result)
+        assertEquals("Не тот результат", Result.success(Product(name)), result)
         verify(productDao).insert(DataProduct(name))
     }
 

@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 @Immutable
 data class CustomColorsPalette(
     val success: Color = Color.Unspecified,
+    val info: Color = Color.Unspecified,
     val error: Color = Color.Unspecified,
 )
 

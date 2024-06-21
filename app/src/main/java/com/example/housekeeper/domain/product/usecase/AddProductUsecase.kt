@@ -1,5 +1,6 @@
 package com.example.housekeeper.domain.product.usecase
 
+import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.domain.product.repository.ProductRepository
 
 class AddProductUsecase(
@@ -11,7 +12,12 @@ class AddProductUsecase(
         } else {
             val result = productRepository.addProduct(name)
             if (result.isSuccess) {
-                AddProductResult.Success
+                val resultValue = result.getOrNull()
+                if (resultValue != null) {
+                    AddProductResult.Success(resultValue)
+                } else {
+                    AddProductResult.UnknownError(null)
+                }
             } else {
                 AddProductResult.UnknownError(result.exceptionOrNull())
             }
@@ -20,7 +26,7 @@ class AddProductUsecase(
 }
 
 sealed interface AddProductResult {
-    data object Success: AddProductResult
+    data class Success(val product: Product): AddProductResult
     data object ProductAlreadyExists: AddProductResult
     data class UnknownError(val t: Throwable?): AddProductResult
 }

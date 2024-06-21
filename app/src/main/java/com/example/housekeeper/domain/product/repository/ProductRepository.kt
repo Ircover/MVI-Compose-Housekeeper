@@ -5,6 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
     suspend fun hasProduct(name: String): Boolean
-    suspend fun addProduct(name: String): Result<Unit>
+    suspend fun addProduct(name: String): Result<Product>
     fun getProducts(): Flow<List<Product>>
 }

@@ -12,10 +12,11 @@ class ProductRepositoryImpl(
         return productDao.getOrNull(name) != null
     }
 
-    override suspend fun addProduct(name: String): Result<Unit> {
+    override suspend fun addProduct(name: String): Result<Product> {
         return try {
-            productDao.insert(DataProduct(name))
-            Result.success(Unit)
+            val dataProduct = DataProduct(name)
+            productDao.insert(dataProduct)
+            Result.success(dataProduct.toProduct())
         } catch (t: Throwable) {
             Result.failure(t)
         }

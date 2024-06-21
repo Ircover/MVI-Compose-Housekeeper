@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
@@ -22,6 +23,8 @@ import com.example.housekeeper.presentation.UserMessage
 import com.example.housekeeper.presentation.UserMessageLevel
 import com.example.housekeeper.presentation.UserMessageShowDuration
 import com.example.housekeeper.ui.theme.HousekeeperTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun CustomSnackbarHost(hostState: SnackbarHostState) = SnackbarHost(hostState) { data ->
@@ -51,23 +54,30 @@ private fun CustomSnackbar(visuals: CustomSnackbarVisuals) {
     }
 }
 
-suspend fun SnackbarHostState.show(context: Context, message: UserMessage) {
-    showSnackbar(
-        CustomSnackbarVisuals(
-            message = context.getString(message.textResId),
-            duration = when(message.duration) {
-                UserMessageShowDuration.Indefinite -> SnackbarDuration.Indefinite
-                UserMessageShowDuration.Long -> SnackbarDuration.Long
-                UserMessageShowDuration.Short -> SnackbarDuration.Short
-            },
-            icon = when (message.level) {
-                UserMessageLevel.Success -> CustomSnackbarIcon.Success
-                UserMessageLevel.Error -> CustomSnackbarIcon.Error
-            },
-            withDismissAction = true,
-            actionLabel = null,
+suspend fun SnackbarHostState.show(
+    context: Context,
+    coroutineScope: CoroutineScope,
+    message: UserMessage,
+) {
+    coroutineScope.launch {
+        showSnackbar(
+            CustomSnackbarVisuals(
+                message = context.getString(message.textResId),
+                duration = when (message.duration) {
+                    UserMessageShowDuration.Indefinite -> SnackbarDuration.Indefinite
+                    UserMessageShowDuration.Long -> SnackbarDuration.Long
+                    UserMessageShowDuration.Short -> SnackbarDuration.Short
+                },
+                icon = when (message.level) {
+                    UserMessageLevel.Success -> CustomSnackbarIcon.Success
+                    UserMessageLevel.Info -> CustomSnackbarIcon.Info
+                    UserMessageLevel.Error -> CustomSnackbarIcon.Error
+                },
+                withDismissAction = true,
+                actionLabel = null,
+            )
         )
-    )
+    }
 }
 
 private data class CustomSnackbarVisuals(
@@ -83,6 +93,7 @@ private enum class CustomSnackbarIcon(
     val iconTint: SpecialColor,
 ) {
     Success(Icons.Filled.CheckCircle, SpecialColor.Success),
+    Info(Icons.Filled.Info, SpecialColor.Info),
     Error(Icons.Filled.Close, SpecialColor.Error),
 }
 
@@ -90,6 +101,12 @@ private enum class CustomSnackbarIcon(
 @Composable
 fun PreviewCustomSnackbar_Success() {
     PreviewCustomSnackbar(CustomSnackbarIcon.Success)
+}
+
+@Preview
+@Composable
+fun PreviewCustomSnackbar_Info() {
+    PreviewCustomSnackbar(CustomSnackbarIcon.Info)
 }
 
 @Preview

@@ -23,6 +23,7 @@ fun <T> CustomDropdownMenu(
     itemFormatter: @Composable (T) -> String,
     onItemChanged: (T) -> Unit,
     isEnabled: Boolean = true,
+    itemContent: @Composable ((T) -> Unit)? = null,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +53,7 @@ fun <T> CustomDropdownMenu(
             items.forEach { item ->
                 DropdownMenuItem(
                     text = {
-                        Text(text = itemFormatter(item))
+                        itemContent?.invoke(item) ?: Text(text = itemFormatter(item))
                     },
                     onClick = {
                         onItemChanged(item)

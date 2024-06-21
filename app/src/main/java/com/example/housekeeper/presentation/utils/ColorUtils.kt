@@ -7,6 +7,7 @@ import com.example.housekeeper.ui.theme.LocalCustomColorsPalette
 
 enum class SpecialColor {
     Success,
+    Info,
     Error,
     ;
 
@@ -15,6 +16,7 @@ enum class SpecialColor {
         @ReadOnlyComposable
         get() = when(this) {
             Success -> LocalCustomColorsPalette.current.success
+            Info -> LocalCustomColorsPalette.current.info
             Error -> LocalCustomColorsPalette.current.error
         }
 }

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.CustomTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -24,19 +26,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.housekeeper.R
 import com.example.housekeeper.domain.Currency
+import com.example.housekeeper.domain.product.AmountType
 import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.presentation.composable.AddProductDialog
 import com.example.housekeeper.presentation.composable.CustomDropdownMenu
 import com.example.housekeeper.presentation.composable.PriceTextField
+import com.example.housekeeper.presentation.composable.RadioTextButton
 import com.example.housekeeper.presentation.utils.CustomSnackbarHost
 import com.example.housekeeper.presentation.utils.collectState
 import com.example.housekeeper.presentation.utils.paddingSmall
@@ -93,6 +99,12 @@ fun SpendCardScreen(
                 onCurrencyChanged = spendCardViewModel.accept { newCurrency ->
                     SpendCardUIEvent.CurrencyChanged(newCurrency)
                 },
+                onAmountTextChanged = spendCardViewModel.accept { newAmount ->
+                    SpendCardUIEvent.AmountChanged(newAmount)
+                },
+                onAmountTypeChanged = spendCardViewModel.accept { newType ->
+                    SpendCardUIEvent.AmountTypeChanged(newType)
+                },
                 onProductChanged = spendCardViewModel.accept { newProduct ->
                     SpendCardUIEvent.ProductChanged(newProduct)
                 },
@@ -122,10 +134,32 @@ private fun RenderSpendCardViewModel(
     isProductLoadingVisible: Boolean,
     onPriceChanged: (TextFieldValue) -> Unit,
     onCurrencyChanged: (Currency) -> Unit,
+    onAmountTextChanged: (TextFieldValue) -> Unit,
+    onAmountTypeChanged: (AmountType) -> Unit,
     onProductChanged: (Product) -> Unit,
     onProductAddClick: () -> Unit,
     onProductDeleteClick: (Product) -> Unit,
 ) {
+    val currentOnPriceChanged by rememberUpdatedState(onPriceChanged)
+    val currentOnCurrencyChanged by rememberUpdatedState(onCurrencyChanged)
+    val currentOnAmountTextChanged by rememberUpdatedState(onAmountTextChanged)
+    val currentOnAmountTypeChanged by rememberUpdatedState(onAmountTypeChanged)
+    val currentOnProductChanged by rememberUpdatedState(onProductChanged)
+    val currentOnProductAddClick by rememberUpdatedState(onProductAddClick)
+    val currentOnProductDeleteClick by rememberUpdatedState(onProductDeleteClick)
+    val context = LocalContext.current
+
+    val currentModifier = remember {
+        Modifier
+            .width(IntrinsicSize.Min)
+        //.paddingSmall()
+    }
+    val currentCurrency = remember { state.currency }
+    val currentAvailableCurrencies = remember {
+        state.availableCurrencies
+    }
+    val currentItemFormatter: (Currency) -> String = remember { { it.sign.toString() } }
+
     Column(
         verticalArrangement = Arrangement.spacedVerticallyByDefault(),
     ) {
@@ -139,20 +173,52 @@ private fun RenderSpendCardViewModel(
             PriceTextField(
                 price = state.priceFieldValue,
                 currency = state.currency,
-                onPriceChanged = onPriceChanged,
+                onPriceChanged = currentOnPriceChanged,
                 modifier = Modifier
                     .paddingSmall()
                     .weight(1f),
             )
             CustomDropdownMenu(
-                modifier = Modifier
-                    .width(IntrinsicSize.Min)
-                    .paddingSmall(),
-                selectedItem = state.currency,
-                items = state.availableCurrencies,
-                itemFormatter = { it.sign.toString() },
-                onItemChanged = onCurrencyChanged,
+                modifier = currentModifier,
+                selectedItem = currentCurrency,
+                items = currentAvailableCurrencies,
+                itemFormatter = currentItemFormatter,
+                onItemChanged = currentOnCurrencyChanged,
             )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.amount),
+                modifier = Modifier.paddingSmall(),
+            )
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                CustomTextField(
+                    value = state.amountFieldValue,
+                    onValueChange = currentOnAmountTextChanged,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .paddingSmall(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+                Row {
+                    RadioTextButton(
+                        isSelected = state.amountType == AmountType.Count,
+                        title = stringResource(R.string.radio_count),
+                        modifier = Modifier.weight(1f),
+                        onClick = { currentOnAmountTypeChanged(AmountType.Count) },
+                    )
+                    RadioTextButton(
+                        isSelected = state.amountType == AmountType.Weight,
+                        title = stringResource(R.string.radio_weigth),
+                        modifier = Modifier.weight(1f),
+                        onClick = { currentOnAmountTypeChanged(AmountType.Weight) },
+                    )
+                }
+            }
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -167,8 +233,8 @@ private fun RenderSpendCardViewModel(
                     .paddingSmall(),
                 selectedItem = state.product,
                 items = state.availableProducts,
-                itemFormatter = { it?.name ?: stringResource(R.string.product_empty_placeholder) },
-                onItemChanged = { it?.let { notNullProduct -> onProductChanged(notNullProduct) } },
+                itemFormatter = { it?.name ?: context.getString(R.string.product_empty_placeholder) },
+                onItemChanged = { it?.let { notNullProduct -> currentOnProductChanged(notNullProduct) } },
                 isEnabled = state.isProductDropdownEnabled,
             ) { product ->
                 Row(
@@ -183,7 +249,7 @@ private fun RenderSpendCardViewModel(
                     )
                     product?.let {
                         IconButton(onClick = {
-                            onProductDeleteClick(product)
+                            currentOnProductDeleteClick(product)
                         }) {
                             Icon(Icons.Filled.Delete, contentDescription = null)
                         }
@@ -192,7 +258,7 @@ private fun RenderSpendCardViewModel(
             }
             IconButton(
                 modifier = Modifier.paddingSmall(),
-                onClick = onProductAddClick,
+                onClick = currentOnProductAddClick,
             ) {
                 if (isProductLoadingVisible) {
                     CircularProgressIndicator()
@@ -231,6 +297,8 @@ private fun PreviewSpendCardScreen(
                     priceFieldValue = TextFieldValue("100"),
                     currency = Currency.Ruble,
                     availableCurrencies = emptyList(),
+                    amountFieldValue = TextFieldValue("5"),
+                    amountType = AmountType.Count,
                     isProductDropdownEnabled = false,
                     product = null,
                     availableProducts = emptyList(),
@@ -238,6 +306,8 @@ private fun PreviewSpendCardScreen(
                 isProductLoadingVisible = isProductLoadingVisible,
                 onPriceChanged = { },
                 onCurrencyChanged = { },
+                onAmountTextChanged = { },
+                onAmountTypeChanged = { },
                 onProductChanged = { },
                 onProductAddClick = { },
                 onProductDeleteClick = { },

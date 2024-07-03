@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.housekeeper.R
 import com.example.housekeeper.domain.Currency
+import com.example.housekeeper.domain.product.AmountType
 import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.domain.product.usecase.AddProductResult
 import com.example.housekeeper.domain.product.usecase.AddProductUsecase
@@ -56,6 +57,8 @@ class SpendCardViewModel(
         when(event) {
             is SpendCardUIEvent.PriceChanged -> setPrice(event.newValue)
             is SpendCardUIEvent.CurrencyChanged -> setCurrency(event.newValue)
+            is SpendCardUIEvent.AmountChanged -> setAmount(event.newValue)
+            is SpendCardUIEvent.AmountTypeChanged -> setAmountType(event.newValue)
             is SpendCardUIEvent.ProductChanged -> setProduct(event.newValue)
             SpendCardUIEvent.AddProductClick -> addProductClick()
             is SpendCardUIEvent.AddProduct -> addProduct(event.name)
@@ -79,6 +82,25 @@ class SpendCardViewModel(
     private fun setCurrency(currency: Currency) = intent {
         reduce {
             state.copy(currency = currency)
+        }
+    }
+
+    private fun setAmount(newAmount: TextFieldValue) = intent {
+        if (newAmount.text.all { it.isDigit() }) {
+            reduce {
+                state.copy(amountFieldValue = newAmount)
+            }
+        }
+    }
+
+    private fun setAmountType(newType: AmountType) = intent {
+        if (state.amountType != newType) {
+            reduce {
+                state.copy(
+                    amountType = newType,
+                    amountFieldValue = TextFieldValue("")
+                )
+            }
         }
     }
 
@@ -155,6 +177,8 @@ private fun initState() = SpendCardState(
     priceFieldValue = TextFieldValue(""),
     currency = Currency.Ruble,
     availableCurrencies = listOf(Currency.Ruble, Currency.Dollar, Currency.Euro),
+    amountFieldValue = TextFieldValue(),
+    amountType = AmountType.Count,
     isProductDropdownEnabled = false,
     product = null,
     availableProducts = emptyList(),

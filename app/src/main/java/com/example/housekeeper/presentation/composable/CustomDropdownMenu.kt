@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
@@ -20,31 +21,42 @@ fun <T> CustomDropdownMenu(
     modifier: Modifier,
     selectedItem: T,
     items: List<T>,
-    itemFormatter: @Composable (T) -> String,
+    itemFormatter: (T) -> String,
     onItemChanged: (T) -> Unit,
     isEnabled: Boolean = true,
     itemContent: @Composable ((T) -> Unit)? = null,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+//    val textValue = itemFormatter(selectedItem)
+//    val currentTextValue = remember(textValue) { textValue }
+    val currentIsEnabled = remember(isEnabled) { isEnabled }
+    val currentOnItemChanged by rememberUpdatedState(onItemChanged)
+    val currentItemFormatter by rememberUpdatedState(itemFormatter)
+    val currentItemContent by rememberUpdatedState(itemContent)
+
     @OptIn(ExperimentalMaterial3Api::class)
     ExposedDropdownMenuBox(
         modifier = modifier,
         expanded = isExpanded,
-        onExpandedChange = { isExpanded = isEnabled && it },
+        onExpandedChange = { isExpanded = currentIsEnabled && it },
     ) {
+        val textModifier = remember {
+            Modifier
+                .fillMaxWidth()
+                .menuAnchor()
+        }
+
         CustomTextField(
             readOnly = true,
-            value = TextFieldValue( itemFormatter(selectedItem)),
+            value = TextFieldValue(currentItemFormatter(selectedItem)),
             onValueChange = { },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
+            modifier = textModifier,
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
                     expanded = isExpanded
                 )
             },
-            enabled = isEnabled,
+            enabled = currentIsEnabled,
         )
         ExposedDropdownMenu(
             expanded = isExpanded,
@@ -53,10 +65,10 @@ fun <T> CustomDropdownMenu(
             items.forEach { item ->
                 DropdownMenuItem(
                     text = {
-                        itemContent?.invoke(item) ?: Text(text = itemFormatter(item))
+                        currentItemContent?.invoke(item) ?: Text(text = currentItemFormatter(item))
                     },
                     onClick = {
-                        onItemChanged(item)
+                        currentOnItemChanged(item)
                         isExpanded = false
                     }
                 )

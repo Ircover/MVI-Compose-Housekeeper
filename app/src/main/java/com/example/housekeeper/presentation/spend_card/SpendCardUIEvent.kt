@@ -4,6 +4,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.example.housekeeper.domain.Currency
 import com.example.housekeeper.domain.product.AmountType
 import com.example.housekeeper.domain.product.Product
+import com.example.housekeeper.domain.shop.Shop
 import com.example.housekeeper.presentation.UIEvent
 
 sealed interface SpendCardUIEvent : UIEvent {
@@ -15,4 +16,8 @@ sealed interface SpendCardUIEvent : UIEvent {
     data object AddProductClick : SpendCardUIEvent
     data class AddProduct(val name: String) : SpendCardUIEvent
     data class DeleteProductClick(val product: Product) : SpendCardUIEvent
+    data class ShopChanged(val newValue: Shop?) : SpendCardUIEvent
+    data object AddShopClick : SpendCardUIEvent
+    data class AddShop(val name: String) : SpendCardUIEvent
+    data class DeleteShopClick(val shop: Shop) : SpendCardUIEvent
 }

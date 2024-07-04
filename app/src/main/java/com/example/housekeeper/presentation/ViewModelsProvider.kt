@@ -7,6 +7,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.housekeeper.domain.product.usecase.AddProductUsecase
 import com.example.housekeeper.domain.product.usecase.GetProductsUsecase
+import com.example.housekeeper.domain.shop.usecase.AddShopUsecase
+import com.example.housekeeper.domain.shop.usecase.GetShopsUsecase
 import com.example.housekeeper.presentation.spend_card.SpendCardViewModel
 import com.example.housekeeper.presentation.spending.SpendingViewModel
 
@@ -14,6 +16,8 @@ class ViewModelsProvider(
     private val navManager: NavManager,
     private val addProductUsecase: AddProductUsecase,
     private val getProductsUsecase: GetProductsUsecase,
+    private val addShopUsecase: AddShopUsecase,
+    private val getShopsUsecase: GetShopsUsecase,
 ) {
     val factory = viewModelFactory {
         initializer { SpendingViewModel(navManager) }
@@ -21,6 +25,8 @@ class ViewModelsProvider(
             SpendCardViewModel(
                 addProductUsecase,
                 getProductsUsecase,
+                addShopUsecase,
+                getShopsUsecase,
                 navManager,
             )
         }

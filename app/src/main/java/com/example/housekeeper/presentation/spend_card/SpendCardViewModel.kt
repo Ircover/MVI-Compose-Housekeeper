@@ -11,10 +11,15 @@ import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.domain.product.usecase.AddProductResult
 import com.example.housekeeper.domain.product.usecase.AddProductUsecase
 import com.example.housekeeper.domain.product.usecase.GetProductsUsecase
+import com.example.housekeeper.domain.shop.Shop
+import com.example.housekeeper.domain.shop.usecase.AddShopResult
+import com.example.housekeeper.domain.shop.usecase.AddShopUsecase
+import com.example.housekeeper.domain.shop.usecase.GetShopsUsecase
 import com.example.housekeeper.presentation.NavManager
 import com.example.housekeeper.presentation.UserMessage
 import com.example.housekeeper.presentation.UserMessageLevel
 import com.example.housekeeper.presentation.UserMessageShowDuration
+import com.example.housekeeper.presentation.emptyImmutableList
 import com.example.housekeeper.presentation.toImmutable
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.ContainerHost
@@ -27,6 +32,8 @@ import org.orbitmvi.orbit.viewmodel.container
 class SpendCardViewModel(
     private val addProductUsecase: AddProductUsecase,
     getProductsUsecase: GetProductsUsecase,
+    private val addShopUsecase: AddShopUsecase,
+    getShopsUsecase: GetShopsUsecase,
     navManager: NavManager,
 ) : ContainerHost<SpendCardState, SpendCardSideEffect>, ViewModel() {
     override val container = container<SpendCardState, SpendCardSideEffect>(initState())
@@ -39,6 +46,18 @@ class SpendCardViewModel(
                         state.copy(
                             availableProducts = products.toImmutable(),
                             isProductDropdownEnabled = products.isNotEmpty()
+                        )
+                    }
+                }
+            }
+        }
+        viewModelScope.launch {
+            getShopsUsecase().collect { shops ->
+                intent {
+                    reduce {
+                        state.copy(
+                            availableShops = shops.toImmutable(),
+                            isShopDropdownEnabled = shops.isNotEmpty()
                         )
                     }
                 }
@@ -64,6 +83,10 @@ class SpendCardViewModel(
             SpendCardUIEvent.AddProductClick -> addProductClick()
             is SpendCardUIEvent.AddProduct -> addProduct(event.name)
             is SpendCardUIEvent.DeleteProductClick -> deleteProduct(event.product)
+            is SpendCardUIEvent.AddShop -> addShop(event.name)
+            SpendCardUIEvent.AddShopClick -> addShopClick()
+            is SpendCardUIEvent.DeleteShopClick -> deleteShop(event.shop)
+            is SpendCardUIEvent.ShopChanged -> setShop(event.newValue)
         }
     }
 
@@ -150,8 +173,8 @@ class SpendCardViewModel(
         }
     }
 
-    private fun addProductIntentWithIndicator(
-        action: suspend SimpleSyntax<SpendCardState, SpendCardSideEffect>.() -> Unit
+    private inline fun addProductIntentWithIndicator(
+        crossinline action: suspend SimpleSyntax<SpendCardState, SpendCardSideEffect>.() -> Unit
     ) = intent {
         postSideEffect(SpendCardSideEffect.ChangeAddProductDialogLoading(true))
         try {
@@ -172,15 +195,86 @@ class SpendCardViewModel(
             )
         )
     }
+
+    private fun setShop(shop: Shop?) = intent {
+        reduce {
+            state.copy(shop = shop)
+        }
+    }
+
+    private fun addShopClick() = intent {
+        postSideEffect(SpendCardSideEffect.ShowAddShopDialog)
+    }
+
+    private fun addShop(name: String) = addShopIntentWithIndicator {
+        val result = addShopUsecase(name)
+        when (result) {
+            AddShopResult.ShopAlreadyExists -> {
+                postSideEffect(
+                    SpendCardSideEffect.ShowMessage(
+                        UserMessage(
+                            R.string.error_shop_exists,
+                            UserMessageLevel.Info,
+                            UserMessageShowDuration.Short,
+                        )
+                    )
+                )
+            }
+            is AddShopResult.UnknownError -> {
+                Log.e("SpendCardViewModel", "add shop error: ${result.t}")
+                postSideEffect(
+                    SpendCardSideEffect.ShowMessage(
+                        UserMessage(
+                            R.string.error_unknown,
+                            UserMessageLevel.Error,
+                            UserMessageShowDuration.Long,
+                        )
+                    )
+                )
+            }
+            is AddShopResult.Success -> {
+                postSideEffect(SpendCardSideEffect.HideAddShopDialog)
+                reduce {
+                    state.copy(shop = result.shop)
+                }
+            }
+        }
+    }
+
+    private inline fun addShopIntentWithIndicator(
+        crossinline action: suspend SimpleSyntax<SpendCardState, SpendCardSideEffect>.() -> Unit
+    ) = intent {
+        postSideEffect(SpendCardSideEffect.ChangeAddShopDialogLoading(true))
+        try {
+            action()
+        } finally {
+            postSideEffect(SpendCardSideEffect.ChangeAddShopDialogLoading(false))
+        }
+    }
+
+    private fun deleteShop(shop: Shop) = intent {
+        postSideEffect(
+            SpendCardSideEffect.ShowMessage(
+                UserMessage(
+                    R.string.not_implemented,
+                    UserMessageLevel.Info,
+                    UserMessageShowDuration.Short,
+                )
+            )
+        )
+    }
 }
 
 private fun initState() = SpendCardState(
     priceFieldValue = TextFieldValue(""),
     currency = Currency.Ruble,
     availableCurrencies = listOf(Currency.Ruble, Currency.Dollar, Currency.Euro).toImmutable(),
-    amountFieldValue = TextFieldValue(),
+    amountFieldValue = TextFieldValue("1"),
     amountType = AmountType.Count,
     isProductDropdownEnabled = false,
     product = null,
-    availableProducts = emptyList<Product>().toImmutable(),
+    availableProducts = emptyImmutableList(),
+    isShopDropdownEnabled = false,
+    shop = null,
+    availableShops = emptyImmutableList()
 )

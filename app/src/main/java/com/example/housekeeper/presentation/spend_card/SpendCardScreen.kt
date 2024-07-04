@@ -3,6 +3,7 @@ package com.example.housekeeper.presentation.spend_card
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +44,7 @@ import com.example.housekeeper.presentation.composable.AddProductDialog
 import com.example.housekeeper.presentation.composable.CustomDropdownMenu
 import com.example.housekeeper.presentation.composable.PriceTextField
 import com.example.housekeeper.presentation.composable.RadioTextButton
+import com.example.housekeeper.presentation.toImmutable
 import com.example.housekeeper.presentation.utils.CustomSnackbarHost
 import com.example.housekeeper.presentation.utils.collectState
 import com.example.housekeeper.presentation.utils.paddingSmall
@@ -57,73 +59,122 @@ fun SpendCardScreen(
     spendCardViewModel: SpendCardViewModel,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     Scaffold(
         modifier = modifier,
         snackbarHost = {
             CustomSnackbarHost(hostState = snackbarHostState)
         },
     ) { innerPadding ->
-        val state = spendCardViewModel.collectState().value
-        var isProductLoadingVisible by remember { mutableStateOf(false) }
-        var isAddProductDialogVisible by remember { mutableStateOf(false) }
-        var isAddProductDialogLoading by remember { mutableStateOf(false) }
-        val coroutineScope = rememberCoroutineScope()
-
-        spendCardViewModel.collectSideEffect {
-            when(it) {
-                is SpendCardSideEffect.ChangeProductLoadingVisibility ->
-                    isProductLoadingVisible = it.isVisible
-                is SpendCardSideEffect.ShowMessage -> {
-                    snackbarHostState.show(context, coroutineScope, it.message)
-                }
-                SpendCardSideEffect.ShowAddProductDialog -> isAddProductDialogVisible = true
-                SpendCardSideEffect.HideAddProductDialog -> isAddProductDialogVisible = false
-                is SpendCardSideEffect.ChangeAddProductDialogLoading ->
-                    isAddProductDialogLoading = it.isLoading
+        val onPriceChanged = remember {
+            spendCardViewModel.accept { newPrice: TextFieldValue ->
+                SpendCardUIEvent.PriceChanged(newPrice)
             }
         }
-
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            RenderSpendCardViewModel(
-                state,
-                isProductLoadingVisible = isProductLoadingVisible,
-                onPriceChanged = spendCardViewModel.accept { newPrice ->
-                    SpendCardUIEvent.PriceChanged(newPrice)
-                },
-                onCurrencyChanged = spendCardViewModel.accept { newCurrency ->
-                    SpendCardUIEvent.CurrencyChanged(newCurrency)
-                },
-                onAmountTextChanged = spendCardViewModel.accept { newAmount ->
-                    SpendCardUIEvent.AmountChanged(newAmount)
-                },
-                onAmountTypeChanged = spendCardViewModel.accept { newType ->
-                    SpendCardUIEvent.AmountTypeChanged(newType)
-                },
-                onProductChanged = spendCardViewModel.accept { newProduct ->
-                    SpendCardUIEvent.ProductChanged(newProduct)
-                },
-                onProductAddClick = spendCardViewModel.accept {
-                    SpendCardUIEvent.AddProductClick
-                },
-                onProductDeleteClick = spendCardViewModel.accept { product ->
-                    SpendCardUIEvent.DeleteProductClick(product)
-                },
-            )
-            if (isAddProductDialogVisible) {
-                AddProductDialog(
-                    isLoading = isAddProductDialogLoading,
-                    onProductAdd = spendCardViewModel.accept { name ->
-                        SpendCardUIEvent.AddProduct(name)
-                    },
-                    onDismissRequest = { isAddProductDialogVisible = false },
-                )
+        val onCurrencyChanged = remember {
+            spendCardViewModel.accept { newCurrency: Currency ->
+                SpendCardUIEvent.CurrencyChanged(newCurrency)
             }
+        }
+        val onAmountTextChanged = remember {
+            spendCardViewModel.accept { newAmount: TextFieldValue ->
+                SpendCardUIEvent.AmountChanged(newAmount)
+            }
+        }
+        val onAmountTypeChanged = remember {
+            spendCardViewModel.accept { newType: AmountType ->
+                SpendCardUIEvent.AmountTypeChanged(newType)
+            }
+        }
+        val onProductChanged = remember {
+            spendCardViewModel.accept { newProduct: Product? ->
+                SpendCardUIEvent.ProductChanged(newProduct)
+            }
+        }
+        val onProductAddClick = remember {
+            spendCardViewModel.accept {
+                SpendCardUIEvent.AddProductClick
+            }
+        }
+        val onProductDeleteClick = remember {
+            spendCardViewModel.accept { product: Product ->
+                SpendCardUIEvent.DeleteProductClick(product)
+            }
+        }
+        SpendCardScreen(
+            innerPadding,
+            snackbarHostState,
+            spendCardViewModel,
+            onPriceChanged,
+            onCurrencyChanged,
+            onAmountTextChanged,
+            onAmountTypeChanged,
+            onProductChanged,
+            onProductAddClick,
+            onProductDeleteClick
+        )
+    }
+}
+@Composable
+private fun SpendCardScreen(
+    innerPadding: PaddingValues,
+    snackbarHostState: SnackbarHostState,
+    spendCardViewModel: SpendCardViewModel,
+    onPriceChanged: (TextFieldValue) -> Unit,
+    onCurrencyChanged: (Currency) -> Unit,
+    onAmountTextChanged: (TextFieldValue) -> Unit,
+    onAmountTypeChanged: (AmountType) -> Unit,
+    onProductChanged: (Product?) -> Unit,
+    onProductAddClick: () -> Unit,
+    onProductDeleteClick: (Product) -> Unit,
+) {
+    val context = LocalContext.current
+    val state = spendCardViewModel.collectState().value
+    var isProductLoadingVisible by remember { mutableStateOf(false) }
+    var isAddProductDialogVisible by remember { mutableStateOf(false) }
+    var isAddProductDialogLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    spendCardViewModel.collectSideEffect {
+        when (it) {
+            is SpendCardSideEffect.ChangeProductLoadingVisibility ->
+                isProductLoadingVisible = it.isVisible
+
+            is SpendCardSideEffect.ShowMessage -> {
+                snackbarHostState.show(context, coroutineScope, it.message)
+            }
+
+            SpendCardSideEffect.ShowAddProductDialog -> isAddProductDialogVisible = true
+            SpendCardSideEffect.HideAddProductDialog -> isAddProductDialogVisible = false
+            is SpendCardSideEffect.ChangeAddProductDialogLoading ->
+                isAddProductDialogLoading = it.isLoading
+        }
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        RenderSpendCardViewModel(
+            state,
+            isProductLoadingVisible = isProductLoadingVisible,
+            onPriceChanged = onPriceChanged,
+            onCurrencyChanged = onCurrencyChanged,
+            onAmountTextChanged = onAmountTextChanged,
+            onAmountTypeChanged = onAmountTypeChanged,
+            onProductChanged = onProductChanged,
+            onProductAddClick = onProductAddClick,
+            onProductDeleteClick = onProductDeleteClick,
+        )
+        if (isAddProductDialogVisible) {
+            AddProductDialog(
+                isLoading = isAddProductDialogLoading,
+                onProductAdd = spendCardViewModel.accept { name ->
+                    SpendCardUIEvent.AddProduct(name)
+                },
+                onDismissRequest = { isAddProductDialogVisible = false },
+            )
         }
     }
 }
@@ -136,7 +187,7 @@ private fun RenderSpendCardViewModel(
     onCurrencyChanged: (Currency) -> Unit,
     onAmountTextChanged: (TextFieldValue) -> Unit,
     onAmountTypeChanged: (AmountType) -> Unit,
-    onProductChanged: (Product) -> Unit,
+    onProductChanged: (Product?) -> Unit,
     onProductAddClick: () -> Unit,
     onProductDeleteClick: (Product) -> Unit,
 ) {
@@ -147,18 +198,6 @@ private fun RenderSpendCardViewModel(
     val currentOnProductChanged by rememberUpdatedState(onProductChanged)
     val currentOnProductAddClick by rememberUpdatedState(onProductAddClick)
     val currentOnProductDeleteClick by rememberUpdatedState(onProductDeleteClick)
-    val context = LocalContext.current
-
-    val currentModifier = remember {
-        Modifier
-            .width(IntrinsicSize.Min)
-        //.paddingSmall()
-    }
-    val currentCurrency = remember { state.currency }
-    val currentAvailableCurrencies = remember {
-        state.availableCurrencies
-    }
-    val currentItemFormatter: (Currency) -> String = remember { { it.sign.toString() } }
 
     Column(
         verticalArrangement = Arrangement.spacedVerticallyByDefault(),
@@ -179,10 +218,12 @@ private fun RenderSpendCardViewModel(
                     .weight(1f),
             )
             CustomDropdownMenu(
-                modifier = currentModifier,
-                selectedItem = currentCurrency,
-                items = currentAvailableCurrencies,
-                itemFormatter = currentItemFormatter,
+                modifier = Modifier
+                    .width(IntrinsicSize.Min)
+                    .paddingSmall(),
+                selectedItem = state.currency,
+                items = state.availableCurrencies,
+                itemFormatter = { it.sign.toString() },
                 onItemChanged = currentOnCurrencyChanged,
             )
         }
@@ -233,8 +274,8 @@ private fun RenderSpendCardViewModel(
                     .paddingSmall(),
                 selectedItem = state.product,
                 items = state.availableProducts,
-                itemFormatter = { it?.name ?: context.getString(R.string.product_empty_placeholder) },
-                onItemChanged = { it?.let { notNullProduct -> currentOnProductChanged(notNullProduct) } },
+                itemFormatter = { it?.name ?: stringResource(R.string.product_empty_placeholder) },
+                onItemChanged = currentOnProductChanged,
                 isEnabled = state.isProductDropdownEnabled,
             ) { product ->
                 Row(
@@ -296,12 +337,12 @@ private fun PreviewSpendCardScreen(
                 SpendCardState(
                     priceFieldValue = TextFieldValue("100"),
                     currency = Currency.Ruble,
-                    availableCurrencies = emptyList(),
+                    availableCurrencies = emptyList<Currency>().toImmutable(),
                     amountFieldValue = TextFieldValue("5"),
                     amountType = AmountType.Count,
                     isProductDropdownEnabled = false,
                     product = null,
-                    availableProducts = emptyList(),
+                    availableProducts = emptyList<Product>().toImmutable(),
                 ),
                 isProductLoadingVisible = isProductLoadingVisible,
                 onPriceChanged = { },

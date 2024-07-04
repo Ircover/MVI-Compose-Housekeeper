@@ -15,6 +15,7 @@ import com.example.housekeeper.presentation.NavManager
 import com.example.housekeeper.presentation.UserMessage
 import com.example.housekeeper.presentation.UserMessageLevel
 import com.example.housekeeper.presentation.UserMessageShowDuration
+import com.example.housekeeper.presentation.toImmutable
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.SimpleSyntax
@@ -36,7 +37,7 @@ class SpendCardViewModel(
                 intent {
                     reduce {
                         state.copy(
-                            availableProducts = products,
+                            availableProducts = products.toImmutable(),
                             isProductDropdownEnabled = products.isNotEmpty()
                         )
                     }
@@ -45,11 +46,11 @@ class SpendCardViewModel(
         }
     }
 
-    fun <T> accept(action: (T) -> SpendCardUIEvent): (T) -> Unit = { input ->
+    inline fun <T> accept(crossinline action: (T) -> SpendCardUIEvent): (T) -> Unit = { input ->
         accept(action(input))
     }
 
-    fun accept(action: () -> SpendCardUIEvent): () -> Unit = {
+    inline fun accept(crossinline action: () -> SpendCardUIEvent): () -> Unit = {
         accept(action())
     }
 
@@ -104,7 +105,7 @@ class SpendCardViewModel(
         }
     }
 
-    private fun setProduct(product: Product) = intent {
+    private fun setProduct(product: Product?) = intent {
         reduce {
             state.copy(product = product)
         }
@@ -176,10 +177,10 @@ class SpendCardViewModel(
 private fun initState() = SpendCardState(
     priceFieldValue = TextFieldValue(""),
     currency = Currency.Ruble,
-    availableCurrencies = listOf(Currency.Ruble, Currency.Dollar, Currency.Euro),
+    availableCurrencies = listOf(Currency.Ruble, Currency.Dollar, Currency.Euro).toImmutable(),
     amountFieldValue = TextFieldValue(),
     amountType = AmountType.Count,
     isProductDropdownEnabled = false,
     product = null,
-    availableProducts = emptyList(),
+    availableProducts = emptyList<Product>().toImmutable(),
 )

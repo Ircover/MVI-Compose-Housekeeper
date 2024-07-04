@@ -11,7 +11,7 @@ sealed interface SpendCardUIEvent : UIEvent {
     data class CurrencyChanged(val newValue: Currency) : SpendCardUIEvent
     data class AmountChanged(val newValue: TextFieldValue) : SpendCardUIEvent
     data class AmountTypeChanged(val newValue: AmountType) : SpendCardUIEvent
-    data class ProductChanged(val newValue: Product) : SpendCardUIEvent
+    data class ProductChanged(val newValue: Product?) : SpendCardUIEvent
     data object AddProductClick : SpendCardUIEvent
     data class AddProduct(val name: String) : SpendCardUIEvent
     data class DeleteProductClick(val product: Product) : SpendCardUIEvent

@@ -4,14 +4,15 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.example.housekeeper.domain.Currency
 import com.example.housekeeper.domain.product.AmountType
 import com.example.housekeeper.domain.product.Product
+import com.example.housekeeper.presentation.ImmutableList
 
 data class SpendCardState(
     val priceFieldValue: TextFieldValue,
     val currency: Currency,
-    val availableCurrencies: List<Currency>,
+    val availableCurrencies: ImmutableList<Currency>,
     val amountFieldValue: TextFieldValue,
     val amountType: AmountType,
     val isProductDropdownEnabled: Boolean,
     val product: Product?,
-    val availableProducts: List<Product>,
+    val availableProducts: ImmutableList<Product>,
 )

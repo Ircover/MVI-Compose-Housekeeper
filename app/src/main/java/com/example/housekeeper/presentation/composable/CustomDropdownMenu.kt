@@ -15,25 +15,52 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
+import com.example.housekeeper.presentation.ImmutableList
+import com.example.housekeeper.presentation.map
+
+data class DropdownMenuItem<T>(
+    val value: T,
+    val title: String,
+)
+
+@Composable
+fun <T> T.toDropdownMenuItem(itemFormatter: @Composable (T) -> String) =
+    DropdownMenuItem(this, itemFormatter(this))
 
 @Composable
 fun <T> CustomDropdownMenu(
     modifier: Modifier,
     selectedItem: T,
-    items: List<T>,
-    itemFormatter: (T) -> String,
+    items: ImmutableList<T>,
+    itemFormatter: @Composable (T) -> String,
+    onItemChanged: (T) -> Unit,
+    isEnabled: Boolean = true,
+    itemContent: @Composable ((T) -> Unit)? = null,
+) {
+    CustomDropdownMenu(
+        modifier,
+        selectedItem.toDropdownMenuItem(itemFormatter),
+        items.map { it.toDropdownMenuItem(itemFormatter) },
+        onItemChanged,
+        isEnabled,
+        itemContent
+    )
+}
+
+@Composable
+fun <T> CustomDropdownMenu(
+    modifier: Modifier,
+    selectedItem: DropdownMenuItem<T>,
+    items: ImmutableList<DropdownMenuItem<T>>,
     onItemChanged: (T) -> Unit,
     isEnabled: Boolean = true,
     itemContent: @Composable ((T) -> Unit)? = null,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-//    val textValue = itemFormatter(selectedItem)
-//    val currentTextValue = remember(textValue) { textValue }
-    val currentIsEnabled = remember(isEnabled) { isEnabled }
     val currentOnItemChanged by rememberUpdatedState(onItemChanged)
-    val currentItemFormatter by rememberUpdatedState(itemFormatter)
     val currentItemContent by rememberUpdatedState(itemContent)
 
+    val currentIsEnabled by rememberUpdatedState(isEnabled)
     @OptIn(ExperimentalMaterial3Api::class)
     ExposedDropdownMenuBox(
         modifier = modifier,
@@ -48,7 +75,7 @@ fun <T> CustomDropdownMenu(
 
         CustomTextField(
             readOnly = true,
-            value = TextFieldValue(currentItemFormatter(selectedItem)),
+            value = TextFieldValue(selectedItem.title),
             onValueChange = { },
             modifier = textModifier,
             trailingIcon = {
@@ -62,13 +89,13 @@ fun <T> CustomDropdownMenu(
             expanded = isExpanded,
             onDismissRequest = { isExpanded = false }
         ) {
-            items.forEach { item ->
+            items.items.forEach { item ->
                 DropdownMenuItem(
                     text = {
-                        currentItemContent?.invoke(item) ?: Text(text = currentItemFormatter(item))
+                        currentItemContent?.invoke(item.value) ?: Text(text = item.title)
                     },
                     onClick = {
-                        currentOnItemChanged(item)
+                        currentOnItemChanged(item.value)
                         isExpanded = false
                     }
                 )

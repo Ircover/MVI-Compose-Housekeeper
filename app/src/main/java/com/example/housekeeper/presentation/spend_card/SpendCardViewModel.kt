@@ -143,7 +143,7 @@ class SpendCardViewModel(
         when (result) {
             AddProductResult.ProductAlreadyExists -> {
                 postSideEffect(
-                    SpendCardSideEffect.ShowMessage(
+                    SpendCardSideEffect.ShowProductDialogMessage(
                         UserMessage(
                             R.string.error_product_exists,
                             UserMessageLevel.Info,
@@ -155,7 +155,7 @@ class SpendCardViewModel(
             is AddProductResult.UnknownError -> {
                 Log.e("SpendCardViewModel", "add product error: ${result.t}")
                 postSideEffect(
-                    SpendCardSideEffect.ShowMessage(
+                    SpendCardSideEffect.ShowProductDialogMessage(
                         UserMessage(
                             R.string.error_unknown,
                             UserMessageLevel.Error,
@@ -211,7 +211,7 @@ class SpendCardViewModel(
         when (result) {
             AddShopResult.ShopAlreadyExists -> {
                 postSideEffect(
-                    SpendCardSideEffect.ShowMessage(
+                    SpendCardSideEffect.ShowShopDialogMessage(
                         UserMessage(
                             R.string.error_shop_exists,
                             UserMessageLevel.Info,
@@ -223,7 +223,7 @@ class SpendCardViewModel(
             is AddShopResult.UnknownError -> {
                 Log.e("SpendCardViewModel", "add shop error: ${result.t}")
                 postSideEffect(
-                    SpendCardSideEffect.ShowMessage(
+                    SpendCardSideEffect.ShowShopDialogMessage(
                         UserMessage(
                             R.string.error_unknown,
                             UserMessageLevel.Error,

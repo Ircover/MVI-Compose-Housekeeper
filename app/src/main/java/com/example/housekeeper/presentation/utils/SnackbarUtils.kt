@@ -36,8 +36,10 @@ fun CustomSnackbarHost(hostState: SnackbarHostState) = SnackbarHost(hostState) {
     }
 }
 @Composable
-private fun CustomSnackbar(visuals: CustomSnackbarVisuals) {
-    Snackbar {
+fun CustomSnackbar(visuals: CustomSnackbarVisuals, modifier: Modifier = Modifier) {
+    Snackbar(
+        modifier = modifier,
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -60,27 +62,27 @@ suspend fun SnackbarHostState.show(
     message: UserMessage,
 ) {
     coroutineScope.launch {
-        showSnackbar(
-            CustomSnackbarVisuals(
-                message = context.getString(message.textResId),
-                duration = when (message.duration) {
-                    UserMessageShowDuration.Indefinite -> SnackbarDuration.Indefinite
-                    UserMessageShowDuration.Long -> SnackbarDuration.Long
-                    UserMessageShowDuration.Short -> SnackbarDuration.Short
-                },
-                icon = when (message.level) {
-                    UserMessageLevel.Success -> CustomSnackbarIcon.Success
-                    UserMessageLevel.Info -> CustomSnackbarIcon.Info
-                    UserMessageLevel.Error -> CustomSnackbarIcon.Error
-                },
-                withDismissAction = true,
-                actionLabel = null,
-            )
-        )
+        showSnackbar(message.toCustomSnackbarVisuals(context))
     }
 }
 
-private data class CustomSnackbarVisuals(
+fun UserMessage.toCustomSnackbarVisuals(context: Context) = CustomSnackbarVisuals(
+    message = context.getString(textResId),
+    duration = when (duration) {
+        UserMessageShowDuration.Indefinite -> SnackbarDuration.Indefinite
+        UserMessageShowDuration.Long -> SnackbarDuration.Long
+        UserMessageShowDuration.Short -> SnackbarDuration.Short
+    },
+    icon = when (level) {
+        UserMessageLevel.Success -> CustomSnackbarIcon.Success
+        UserMessageLevel.Info -> CustomSnackbarIcon.Info
+        UserMessageLevel.Error -> CustomSnackbarIcon.Error
+    },
+    withDismissAction = true,
+    actionLabel = null,
+)
+
+data class CustomSnackbarVisuals(
     override val actionLabel: String?,
     override val duration: SnackbarDuration,
     override val message: String,
@@ -88,7 +90,7 @@ private data class CustomSnackbarVisuals(
     val icon: CustomSnackbarIcon,
 ) : SnackbarVisuals
 
-private enum class CustomSnackbarIcon(
+enum class CustomSnackbarIcon(
     val icon: ImageVector,
     val iconTint: SpecialColor,
 ) {

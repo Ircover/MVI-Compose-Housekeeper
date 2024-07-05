@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package androidx.compose.material
+package com.example.housekeeper.presentation.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.Interaction
@@ -23,6 +23,11 @@ import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.TextFieldColors
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TextFieldDefaults.indicatorLine
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

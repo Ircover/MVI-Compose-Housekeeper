@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.CustomTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -40,9 +39,11 @@ import com.example.housekeeper.domain.Currency
 import com.example.housekeeper.domain.product.AmountType
 import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.domain.shop.Shop
+import com.example.housekeeper.presentation.UserMessage
 import com.example.housekeeper.presentation.composable.AddProductDialog
 import com.example.housekeeper.presentation.composable.AddShopDialog
 import com.example.housekeeper.presentation.composable.CustomDropdownMenu
+import com.example.housekeeper.presentation.composable.CustomTextField
 import com.example.housekeeper.presentation.composable.PriceTextField
 import com.example.housekeeper.presentation.composable.RadioTextButton
 import com.example.housekeeper.presentation.emptyImmutableList
@@ -157,10 +158,19 @@ private fun SpendCardScreen(
     var isAddShopDialogLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
+    var productDialogMessage: UserMessage? by remember { mutableStateOf(null) }
+    var shopDialogMessage: UserMessage? by remember { mutableStateOf(null) }
+
     spendCardViewModel.collectSideEffect {
         when (it) {
             is SpendCardSideEffect.ShowMessage -> {
                 snackbarHostState.show(context, coroutineScope, it.message)
+            }
+            is SpendCardSideEffect.ShowProductDialogMessage -> {
+                productDialogMessage = it.message
+            }
+            is SpendCardSideEffect.ShowShopDialogMessage -> {
+                shopDialogMessage = it.message
             }
             SpendCardSideEffect.ShowAddProductDialog -> isAddProductDialogVisible = true
             SpendCardSideEffect.HideAddProductDialog -> isAddProductDialogVisible = false
@@ -197,6 +207,8 @@ private fun SpendCardScreen(
         if (isAddProductDialogVisible) {
             AddProductDialog(
                 isLoading = isAddProductDialogLoading,
+                message = productDialogMessage,
+                onMessageDismiss = { productDialogMessage = null },
                 onProductAdd = spendCardViewModel.accept { name ->
                     SpendCardUIEvent.AddProduct(name)
                 },
@@ -206,6 +218,8 @@ private fun SpendCardScreen(
         if (isAddShopDialogVisible) {
             AddShopDialog(
                 isLoading = isAddShopDialogLoading,
+                message = shopDialogMessage,
+                onMessageDismiss = { shopDialogMessage = null },
                 onShopAdd = spendCardViewModel.accept { name ->
                     SpendCardUIEvent.AddShop(name)
                 },

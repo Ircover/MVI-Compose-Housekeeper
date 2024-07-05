@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.Button
-import androidx.compose.material.CustomTextField
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
@@ -14,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,12 +21,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import com.example.housekeeper.R
+import com.example.housekeeper.presentation.UserMessage
 import com.example.housekeeper.presentation.utils.mediumRoundedCornerShape
 import com.example.housekeeper.presentation.utils.paddingMedium
 import com.example.housekeeper.presentation.utils.paddingSmall
@@ -36,21 +39,26 @@ import com.example.housekeeper.ui.theme.Typography
 @Composable
 fun AddShopDialog(
     isLoading: Boolean,
+    message: UserMessage?,
+    onMessageDismiss: () -> Unit,
     onShopAdd: (String) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
-        AddShopDialogContent(isLoading, onShopAdd, onDismissRequest)
+        AddShopDialogContent(isLoading, message, onMessageDismiss, onShopAdd, onDismissRequest)
     }
 }
 
 @Composable
 fun AddShopDialogContent(
     isLoading: Boolean,
+    message: UserMessage?,
+    onMessageDismiss: () -> Unit,
     onShopAdd: (String) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     var result by remember { mutableStateOf(TextFieldValue()) }
+    val focusRequester = remember { FocusRequester() }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = mediumRoundedCornerShape(),
@@ -86,7 +94,8 @@ fun AddShopDialogContent(
                     },
                     modifier = Modifier
                         .paddingSmall()
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
                 )
                 Button(
                     onClick = { onShopAdd(result.text) },
@@ -107,8 +116,15 @@ fun AddShopDialogContent(
                         )
                     }
                 }
+
+                LaunchedEffect(Unit) {
+                    focusRequester.requestFocus()
+                }
             }
         }
+    }
+    if (message != null) {
+        SnackbarInDialogContainer(message, onDismiss = onMessageDismiss)
     }
 }
 
@@ -130,6 +146,8 @@ private fun PreviewAddShopDialog(isLoading: Boolean) {
         Surface {
             AddShopDialogContent(
                 isLoading = isLoading,
+                message = null,
+                onMessageDismiss = { },
                 onShopAdd = { },
                 onDismissRequest = { },
             )

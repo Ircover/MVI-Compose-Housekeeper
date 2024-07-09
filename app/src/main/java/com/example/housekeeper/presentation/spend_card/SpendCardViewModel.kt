@@ -94,6 +94,7 @@ class SpendCardViewModel(
             is SpendCardUIEvent.DeleteShopClick -> deleteShop(event.shop)
             is SpendCardUIEvent.ShopChanged -> setShop(event.newValue)
             is SpendCardUIEvent.DateChanged -> setDate(event.newValue)
+            is SpendCardUIEvent.CommentChanged -> setComment(event.newValue)
         }
     }
 
@@ -279,6 +280,12 @@ class SpendCardViewModel(
             )
         }
     }
+
+    private fun setComment(newComment: TextFieldValue) = intent {
+        reduce {
+            state.copy(comment = newComment)
+        }
+    }
 }
 
 private fun initState(
@@ -297,5 +304,6 @@ private fun initState(
     availableProducts = emptyImmutableList(),
     isShopDropdownEnabled = false,
     shop = null,
-    availableShops = emptyImmutableList()
+    availableShops = emptyImmutableList(),
+    comment = TextFieldValue("")
 )

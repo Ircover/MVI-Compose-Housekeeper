@@ -124,6 +124,11 @@ fun SpendCardScreen(
                 SpendCardUIEvent.DateChanged(date)
             }
         }
+        val onCommentChanged = remember {
+            spendCardViewModel.accept { newComment: TextFieldValue ->
+                SpendCardUIEvent.CommentChanged(newComment)
+            }
+        }
         SpendCardScreen(
             innerPadding,
             snackbarHostState,
@@ -139,6 +144,7 @@ fun SpendCardScreen(
             onShopAddClick,
             onShopDeleteClick,
             onDateChanged,
+            onCommentChanged,
         )
     }
 }
@@ -159,6 +165,7 @@ private fun SpendCardScreen(
     onShopAddClick: () -> Unit,
     onShopDeleteClick: (Shop) -> Unit,
     onDateChanged: (Long) -> Unit,
+    onCommentChanged: (TextFieldValue) -> Unit,
 ) {
     val context = LocalContext.current
     val state = spendCardViewModel.collectState().value
@@ -216,6 +223,7 @@ private fun SpendCardScreen(
             onShopAddClick = onShopAddClick,
             onShopDeleteClick = onShopDeleteClick,
             onDateClick = onDateClick,
+            onCommentChanged = onCommentChanged,
         )
         if (isAddProductDialogVisible) {
             AddProductDialog(
@@ -266,6 +274,7 @@ private fun RenderSpendCardViewModel(
     onShopAddClick: () -> Unit = { },
     onShopDeleteClick: (Shop) -> Unit = { },
     onDateClick: () -> Unit = { },
+    onCommentChanged: (TextFieldValue) -> Unit = { },
 ) {
     val currentOnPriceChanged by rememberUpdatedState(onPriceChanged)
     val currentOnCurrencyChanged by rememberUpdatedState(onCurrencyChanged)
@@ -277,6 +286,8 @@ private fun RenderSpendCardViewModel(
     val currentOnShopChanged by rememberUpdatedState(onShopChanged)
     val currentOnShopAddClick by rememberUpdatedState(onShopAddClick)
     val currentOnShopDeleteClick by rememberUpdatedState(onShopDeleteClick)
+    val currentOnDateClick by rememberUpdatedState(onDateClick)
+    val currentOnCommentChanged by rememberUpdatedState(onCommentChanged)
 
     Column(
         verticalArrangement = Arrangement.spacedVerticallyByDefault(),
@@ -291,7 +302,7 @@ private fun RenderSpendCardViewModel(
             )
             DateTextField(
                 date = state.dateString,
-                onClick = onDateClick,
+                onClick = currentOnDateClick,
                 modifier = Modifier
                     .paddingSmall()
                     .fillMaxWidth(),
@@ -452,6 +463,22 @@ private fun RenderSpendCardViewModel(
                 )
             }
         }
+        //Комментарий
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.comment),
+                modifier = Modifier.paddingSmall(),
+            )
+            CustomTextField(
+                value = state.comment,
+                onValueChange = currentOnCommentChanged,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .paddingSmall(),
+            )
+        }
     }
 }
 
@@ -474,7 +501,8 @@ fun PreviewSpendCardScreen_Default() {
                     availableProducts = emptyImmutableList(),
                     isShopDropdownEnabled = false,
                     shop = null,
-                    availableShops = emptyImmutableList()
+                    availableShops = emptyImmutableList(),
+                    comment = TextFieldValue()
                 ),
             )
         }

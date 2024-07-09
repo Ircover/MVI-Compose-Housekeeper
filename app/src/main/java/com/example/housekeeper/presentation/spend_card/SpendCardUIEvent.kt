@@ -21,4 +21,5 @@ sealed interface SpendCardUIEvent : UIEvent {
     data class AddShop(val name: String) : SpendCardUIEvent
     data class DeleteShopClick(val shop: Shop) : SpendCardUIEvent
     data class DateChanged(val newValue: Long) : SpendCardUIEvent
+    data class CommentChanged(val newValue: TextFieldValue) : SpendCardUIEvent
 }

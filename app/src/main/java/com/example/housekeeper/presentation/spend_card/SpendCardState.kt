@@ -21,4 +21,5 @@ data class SpendCardState(
     val isShopDropdownEnabled: Boolean,
     val shop: Shop?,
     val availableShops: ImmutableList<Shop>,
+    val comment: TextFieldValue,
 )

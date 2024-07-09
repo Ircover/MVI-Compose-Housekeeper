@@ -15,6 +15,7 @@ import com.example.housekeeper.domain.shop.Shop
 import com.example.housekeeper.domain.shop.usecase.AddShopResult
 import com.example.housekeeper.domain.shop.usecase.AddShopUsecase
 import com.example.housekeeper.domain.shop.usecase.GetShopsUsecase
+import com.example.housekeeper.presentation.DateManager
 import com.example.housekeeper.presentation.NavManager
 import com.example.housekeeper.presentation.UserMessage
 import com.example.housekeeper.presentation.UserMessageLevel
@@ -35,8 +36,13 @@ class SpendCardViewModel(
     private val addShopUsecase: AddShopUsecase,
     getShopsUsecase: GetShopsUsecase,
     navManager: NavManager,
+    private val dateManager: DateManager,
 ) : ContainerHost<SpendCardState, SpendCardSideEffect>, ViewModel() {
-    override val container = container<SpendCardState, SpendCardSideEffect>(initState())
+    override val container = container<SpendCardState, SpendCardSideEffect>(
+        dateManager.now().let { now ->
+            initState(now, dateManager.formatForUser(now))
+        }
+    )
 
     init {
         viewModelScope.launch {
@@ -87,6 +93,7 @@ class SpendCardViewModel(
             SpendCardUIEvent.AddShopClick -> addShopClick()
             is SpendCardUIEvent.DeleteShopClick -> deleteShop(event.shop)
             is SpendCardUIEvent.ShopChanged -> setShop(event.newValue)
+            is SpendCardUIEvent.DateChanged -> setDate(event.newValue)
         }
     }
 
@@ -263,9 +270,23 @@ class SpendCardViewModel(
             )
         )
     }
+
+    private fun setDate(dateMillis: Long) = intent {
+        reduce {
+            state.copy(
+                dateMillis = dateMillis,
+                dateString = dateManager.formatForUser(dateMillis),
+            )
+        }
+    }
 }
 
-private fun initState() = SpendCardState(
+private fun initState(
+    dateMillis: Long,
+    dateString: String,
+) = SpendCardState(
+    dateMillis = dateMillis,
+    dateString = dateString,
     priceFieldValue = TextFieldValue(""),
     currency = Currency.Ruble,
     availableCurrencies = listOf(Currency.Ruble, Currency.Dollar, Currency.Euro).toImmutable(),

@@ -8,6 +8,8 @@ import com.example.housekeeper.domain.shop.Shop
 import com.example.housekeeper.presentation.ImmutableList
 
 data class SpendCardState(
+    val dateMillis: Long,
+    val dateString: String,
     val priceFieldValue: TextFieldValue,
     val currency: Currency,
     val availableCurrencies: ImmutableList<Currency>,

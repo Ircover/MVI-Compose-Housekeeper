@@ -17,4 +17,6 @@
     <string name="radio_count">Count</string>
     <string name="radio_weigth">Weight (grams)</string>
     <string name="shop">Shop</string>
+    <string name="date">Date</string>
+    <string name="ok">OK</string>
 </resources>

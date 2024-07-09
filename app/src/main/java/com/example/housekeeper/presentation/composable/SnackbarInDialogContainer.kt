@@ -53,7 +53,7 @@ fun SnackbarInDialogContainer(
         }
     }
 
-    val popupPosProvider by imeMonitor()
+    val popupPosProvider by imeMonitor(context)
     Popup(
         popupPositionProvider = popupPosProvider,
         properties = PopupProperties(clippingEnabled = false),
@@ -86,9 +86,8 @@ private fun getDuration(duration: SnackbarDuration): Long {
  * PopupPositionProvider.
  */
 @Composable
-private fun imeMonitor(): State<PopupPositionProvider> {
+private fun imeMonitor(context: Context): State<PopupPositionProvider> {
     val provider = remember { mutableStateOf(ImePopupPositionProvider()) }
-    val context = LocalContext.current
     val decorView = remember(context) { context.getActivity()?.window?.decorView }
     if (decorView != null) {
         val ime = remember { WindowInsetsCompat.Type.ime() }

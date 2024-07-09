@@ -44,6 +44,8 @@ import com.example.housekeeper.presentation.composable.AddProductDialog
 import com.example.housekeeper.presentation.composable.AddShopDialog
 import com.example.housekeeper.presentation.composable.CustomDropdownMenu
 import com.example.housekeeper.presentation.composable.CustomTextField
+import com.example.housekeeper.presentation.composable.DatePickerDialog
+import com.example.housekeeper.presentation.composable.DateTextField
 import com.example.housekeeper.presentation.composable.PriceTextField
 import com.example.housekeeper.presentation.composable.RadioTextButton
 import com.example.housekeeper.presentation.emptyImmutableList
@@ -117,6 +119,11 @@ fun SpendCardScreen(
                 SpendCardUIEvent.DeleteShopClick(shop)
             }
         }
+        val onDateChanged = remember {
+            spendCardViewModel.accept { date: Long ->
+                SpendCardUIEvent.DateChanged(date)
+            }
+        }
         SpendCardScreen(
             innerPadding,
             snackbarHostState,
@@ -131,9 +138,11 @@ fun SpendCardScreen(
             onShopChanged,
             onShopAddClick,
             onShopDeleteClick,
+            onDateChanged,
         )
     }
 }
+
 @Composable
 private fun SpendCardScreen(
     innerPadding: PaddingValues,
@@ -149,6 +158,7 @@ private fun SpendCardScreen(
     onShopChanged: (Shop?) -> Unit,
     onShopAddClick: () -> Unit,
     onShopDeleteClick: (Shop) -> Unit,
+    onDateChanged: (Long) -> Unit,
 ) {
     val context = LocalContext.current
     val state = spendCardViewModel.collectState().value
@@ -156,6 +166,8 @@ private fun SpendCardScreen(
     var isAddProductDialogLoading by remember { mutableStateOf(false) }
     var isAddShopDialogVisible by remember { mutableStateOf(false) }
     var isAddShopDialogLoading by remember { mutableStateOf(false) }
+    var isDatePickerDialogVisible by remember { mutableStateOf(false) }
+    val onDateClick: () -> Unit by rememberUpdatedState { isDatePickerDialogVisible = true }
     val coroutineScope = rememberCoroutineScope()
 
     var productDialogMessage: UserMessage? by remember { mutableStateOf(null) }
@@ -203,6 +215,7 @@ private fun SpendCardScreen(
             onShopChanged = onShopChanged,
             onShopAddClick = onShopAddClick,
             onShopDeleteClick = onShopDeleteClick,
+            onDateClick = onDateClick,
         )
         if (isAddProductDialogVisible) {
             AddProductDialog(
@@ -226,6 +239,16 @@ private fun SpendCardScreen(
                 onDismissRequest = { isAddShopDialogVisible = false },
             )
         }
+        if (isDatePickerDialogVisible) {
+            DatePickerDialog(
+                initialDate = state.dateMillis,
+                onDismissRequest = { isDatePickerDialogVisible = false },
+                onOkClick = {
+                    isDatePickerDialogVisible = false
+                    onDateChanged(it)
+                }
+            )
+        }
     }
 }
 
@@ -242,6 +265,7 @@ private fun RenderSpendCardViewModel(
     onShopChanged: (Shop?) -> Unit = { },
     onShopAddClick: () -> Unit = { },
     onShopDeleteClick: (Shop) -> Unit = { },
+    onDateClick: () -> Unit = { },
 ) {
     val currentOnPriceChanged by rememberUpdatedState(onPriceChanged)
     val currentOnCurrencyChanged by rememberUpdatedState(onCurrencyChanged)
@@ -257,6 +281,22 @@ private fun RenderSpendCardViewModel(
     Column(
         verticalArrangement = Arrangement.spacedVerticallyByDefault(),
     ) {
+        //Дата
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.date),
+                modifier = Modifier.paddingSmall(),
+            )
+            DateTextField(
+                date = state.dateString,
+                onClick = onDateClick,
+                modifier = Modifier
+                    .paddingSmall()
+                    .fillMaxWidth(),
+            )
+        }
         //Цена
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -422,6 +462,8 @@ fun PreviewSpendCardScreen_Default() {
         Surface {
             RenderSpendCardViewModel(
                 SpendCardState(
+                    dateMillis = 0L,
+                    dateString = "01.01.2024",
                     priceFieldValue = TextFieldValue("100"),
                     currency = Currency.Ruble,
                     availableCurrencies = emptyImmutableList(),

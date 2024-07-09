@@ -18,6 +18,7 @@ class ViewModelsProvider(
     private val getProductsUsecase: GetProductsUsecase,
     private val addShopUsecase: AddShopUsecase,
     private val getShopsUsecase: GetShopsUsecase,
+    private val dateManager: DateManager,
 ) {
     val factory = viewModelFactory {
         initializer { SpendingViewModel(navManager) }
@@ -28,6 +29,7 @@ class ViewModelsProvider(
                 addShopUsecase,
                 getShopsUsecase,
                 navManager,
+                dateManager,
             )
         }
     }

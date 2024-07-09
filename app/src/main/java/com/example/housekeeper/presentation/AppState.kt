@@ -22,6 +22,7 @@ class AppState(
     val navController: NavHostController
 ) {
     val navManager = NavManagerImpl(navController)
+    val dateManager = DateManager()
     val database: AppDatabase = Room.databaseBuilder(
         applicationContext,
         AppDatabase::class.java,
@@ -35,6 +36,7 @@ class AppState(
         GetProductsUsecase(productRepository),
         AddShopUsecase(shopRepository),
         GetShopsUsecase(shopRepository),
+        dateManager,
     )
     val currentRoute: String?
         get() = navController.currentDestination?.route

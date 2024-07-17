@@ -289,6 +289,7 @@ private fun RenderSpendCardViewModel(
     val currentOnDateClick by rememberUpdatedState(onDateClick)
     val currentOnCommentChanged by rememberUpdatedState(onCommentChanged)
 
+    val firstColumnWidthFraction = 0.25f
     Column(
         verticalArrangement = Arrangement.spacedVerticallyByDefault(),
     ) {
@@ -298,7 +299,9 @@ private fun RenderSpendCardViewModel(
         ) {
             Text(
                 text = stringResource(R.string.date),
-                modifier = Modifier.paddingSmall(),
+                modifier = Modifier
+                    .paddingSmall()
+                    .fillMaxWidth(firstColumnWidthFraction),
             )
             DateTextField(
                 date = state.dateString,
@@ -314,7 +317,9 @@ private fun RenderSpendCardViewModel(
         ) {
             Text(
                 text = stringResource(R.string.price),
-                modifier = Modifier.paddingSmall(),
+                modifier = Modifier
+                    .paddingSmall()
+                    .fillMaxWidth(firstColumnWidthFraction),
             )
             PriceTextField(
                 price = state.priceFieldValue,
@@ -340,7 +345,9 @@ private fun RenderSpendCardViewModel(
         ) {
             Text(
                 text = stringResource(R.string.amount),
-                modifier = Modifier.paddingSmall(),
+                modifier = Modifier
+                    .paddingSmall()
+                    .fillMaxWidth(firstColumnWidthFraction),
             )
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -375,7 +382,9 @@ private fun RenderSpendCardViewModel(
         ) {
             Text(
                 text = stringResource(R.string.product),
-                modifier = Modifier.paddingSmall(),
+                modifier = Modifier
+                    .paddingSmall()
+                    .fillMaxWidth(firstColumnWidthFraction),
             )
             CustomDropdownMenu(
                 modifier = Modifier
@@ -422,7 +431,9 @@ private fun RenderSpendCardViewModel(
         ) {
             Text(
                 text = stringResource(R.string.shop),
-                modifier = Modifier.paddingSmall(),
+                modifier = Modifier
+                    .paddingSmall()
+                    .fillMaxWidth(firstColumnWidthFraction),
             )
             CustomDropdownMenu(
                 modifier = Modifier
@@ -469,7 +480,9 @@ private fun RenderSpendCardViewModel(
         ) {
             Text(
                 text = stringResource(R.string.comment),
-                modifier = Modifier.paddingSmall(),
+                modifier = Modifier
+                    .paddingSmall()
+                    .fillMaxWidth(firstColumnWidthFraction),
             )
             CustomTextField(
                 value = state.comment,

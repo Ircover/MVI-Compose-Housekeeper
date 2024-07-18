@@ -95,6 +95,7 @@ class SpendCardViewModel(
             is SpendCardUIEvent.ShopChanged -> setShop(event.newValue)
             is SpendCardUIEvent.DateChanged -> setDate(event.newValue)
             is SpendCardUIEvent.CommentChanged -> setComment(event.newValue)
+            SpendCardUIEvent.SaveClick -> save()
         }
     }
 
@@ -107,6 +108,7 @@ class SpendCardViewModel(
                 reduce {
                     state.copy(priceFieldValue = newPrice)
                 }
+                checkPrice()
             }
         }
     }
@@ -122,6 +124,7 @@ class SpendCardViewModel(
             reduce {
                 state.copy(amountFieldValue = newAmount)
             }
+            checkAmount()
         }
     }
 
@@ -140,6 +143,7 @@ class SpendCardViewModel(
         reduce {
             state.copy(product = product)
         }
+        checkProduct()
     }
 
     private fun addProductClick() = intent {
@@ -286,6 +290,55 @@ class SpendCardViewModel(
             state.copy(comment = newComment)
         }
     }
+
+    private fun save() = intent {
+        val isSpendValid = checkPrice() and checkAmount() and checkProduct()
+        if (isSpendValid) {
+            postSideEffect(
+                SpendCardSideEffect.ShowMessage(
+                    UserMessage(
+                        R.string.not_implemented,
+                        UserMessageLevel.Info,
+                        UserMessageShowDuration.Short,
+                    )
+                )
+            )
+        } else {
+            postSideEffect(
+                SpendCardSideEffect.ShowMessage(
+                    UserMessage(
+                        R.string.error_spend_is_not_valid,
+                        UserMessageLevel.Error,
+                        UserMessageShowDuration.Short,
+                    )
+                )
+            )
+        }
+    }
+
+    private suspend fun SimpleSyntax<SpendCardState, SpendCardSideEffect>.checkPrice(): Boolean {
+        val isValid = state.priceFieldValue.text.isNotEmpty()
+        reduce {
+            state.copy(isEmptyPriceErrorVisible = !isValid)
+        }
+        return isValid
+    }
+
+    private suspend fun SimpleSyntax<SpendCardState, SpendCardSideEffect>.checkAmount(): Boolean {
+        val isValid = state.amountFieldValue.text.isNotEmpty()
+        reduce {
+            state.copy(isEmptyAmountErrorVisible = !isValid)
+        }
+        return isValid
+    }
+
+    private suspend fun SimpleSyntax<SpendCardState, SpendCardSideEffect>.checkProduct(): Boolean {
+        val isValid = state.product != null
+        reduce {
+            state.copy(isEmptyProductErrorVisible = !isValid)
+        }
+        return isValid
+    }
 }
 
 private fun initState(
@@ -305,5 +358,8 @@ private fun initState(
     isShopDropdownEnabled = false,
     shop = null,
     availableShops = emptyImmutableList(),
-    comment = TextFieldValue("")
+    comment = TextFieldValue(""),
+    isEmptyPriceErrorVisible = false,
+    isEmptyAmountErrorVisible = false,
+    isEmptyProductErrorVisible = false,
 )

@@ -20,4 +20,9 @@
     <string name="date">Date</string>
     <string name="ok">OK</string>
     <string name="comment">Comment</string>
+    <string name="save">Save</string>
+    <string name="error_empty_price">Price cannot be empty</string>
+    <string name="error_empty_amount">Amount cannot be empty</string>
+    <string name="error_empty_product">Product cannot be empty</string>
+    <string name="error_spend_is_not_valid">Please fill all the mandatory fields</string>
 </resources>

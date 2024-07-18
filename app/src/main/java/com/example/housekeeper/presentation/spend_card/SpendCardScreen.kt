@@ -7,13 +7,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.AddCircle
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -55,6 +60,7 @@ import com.example.housekeeper.presentation.utils.paddingSmall
 import com.example.housekeeper.presentation.utils.show
 import com.example.housekeeper.presentation.utils.spacedVerticallyByDefault
 import com.example.housekeeper.ui.theme.HousekeeperTheme
+import com.example.housekeeper.ui.theme.LocalCustomColorsPalette
 import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
@@ -129,6 +135,11 @@ fun SpendCardScreen(
                 SpendCardUIEvent.CommentChanged(newComment)
             }
         }
+        val onSaveClick = remember {
+            spendCardViewModel.accept {
+                SpendCardUIEvent.SaveClick
+            }
+        }
         SpendCardScreen(
             innerPadding,
             snackbarHostState,
@@ -145,6 +156,7 @@ fun SpendCardScreen(
             onShopDeleteClick,
             onDateChanged,
             onCommentChanged,
+            onSaveClick,
         )
     }
 }
@@ -166,6 +178,7 @@ private fun SpendCardScreen(
     onShopDeleteClick: (Shop) -> Unit,
     onDateChanged: (Long) -> Unit,
     onCommentChanged: (TextFieldValue) -> Unit,
+    onSaveClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val state = spendCardViewModel.collectState().value
@@ -224,6 +237,7 @@ private fun SpendCardScreen(
             onShopDeleteClick = onShopDeleteClick,
             onDateClick = onDateClick,
             onCommentChanged = onCommentChanged,
+            onSaveClick = onSaveClick,
         )
         if (isAddProductDialogVisible) {
             AddProductDialog(
@@ -275,222 +289,256 @@ private fun RenderSpendCardViewModel(
     onShopDeleteClick: (Shop) -> Unit = { },
     onDateClick: () -> Unit = { },
     onCommentChanged: (TextFieldValue) -> Unit = { },
+    onSaveClick: () -> Unit = { },
 ) {
-    val currentOnPriceChanged by rememberUpdatedState(onPriceChanged)
-    val currentOnCurrencyChanged by rememberUpdatedState(onCurrencyChanged)
-    val currentOnAmountTextChanged by rememberUpdatedState(onAmountTextChanged)
-    val currentOnAmountTypeChanged by rememberUpdatedState(onAmountTypeChanged)
-    val currentOnProductChanged by rememberUpdatedState(onProductChanged)
-    val currentOnProductAddClick by rememberUpdatedState(onProductAddClick)
-    val currentOnProductDeleteClick by rememberUpdatedState(onProductDeleteClick)
-    val currentOnShopChanged by rememberUpdatedState(onShopChanged)
-    val currentOnShopAddClick by rememberUpdatedState(onShopAddClick)
-    val currentOnShopDeleteClick by rememberUpdatedState(onShopDeleteClick)
-    val currentOnDateClick by rememberUpdatedState(onDateClick)
-    val currentOnCommentChanged by rememberUpdatedState(onCommentChanged)
-
     val firstColumnWidthFraction = 0.25f
-    Column(
-        verticalArrangement = Arrangement.spacedVerticallyByDefault(),
-    ) {
-        //Дата
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+    Column {
+        Column(
+            verticalArrangement = Arrangement.spacedVerticallyByDefault(),
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
         ) {
-            Text(
-                text = stringResource(R.string.date),
-                modifier = Modifier
-                    .paddingSmall()
-                    .fillMaxWidth(firstColumnWidthFraction),
-            )
-            DateTextField(
-                date = state.dateString,
-                onClick = currentOnDateClick,
-                modifier = Modifier
-                    .paddingSmall()
-                    .fillMaxWidth(),
-            )
-        }
-        //Цена
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.price),
-                modifier = Modifier
-                    .paddingSmall()
-                    .fillMaxWidth(firstColumnWidthFraction),
-            )
-            PriceTextField(
-                price = state.priceFieldValue,
-                currency = state.currency,
-                onPriceChanged = currentOnPriceChanged,
-                modifier = Modifier
-                    .paddingSmall()
-                    .weight(1f),
-            )
-            CustomDropdownMenu(
-                modifier = Modifier
-                    .width(IntrinsicSize.Min)
-                    .paddingSmall(),
-                selectedItem = state.currency,
-                items = state.availableCurrencies,
-                itemFormatter = { it.sign.toString() },
-                onItemChanged = currentOnCurrencyChanged,
-            )
-        }
-        //Количество
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.amount),
-                modifier = Modifier
-                    .paddingSmall()
-                    .fillMaxWidth(firstColumnWidthFraction),
-            )
-            Column(
-                modifier = Modifier.fillMaxWidth()
+            //Дата
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                Text(
+                    text = stringResource(R.string.date),
+                    modifier = Modifier
+                        .paddingSmall()
+                        .fillMaxWidth(firstColumnWidthFraction),
+                )
+                DateTextField(
+                    date = state.dateString,
+                    onClick = onDateClick,
+                    modifier = Modifier
+                        .paddingSmall()
+                        .fillMaxWidth(),
+                )
+            }
+            //Цена
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.price),
+                    modifier = Modifier
+                        .paddingSmall()
+                        .fillMaxWidth(firstColumnWidthFraction),
+                )
+                Column {
+                    Row {
+                        PriceTextField(
+                            price = state.priceFieldValue,
+                            currency = state.currency,
+                            onPriceChanged = onPriceChanged,
+                            modifier = Modifier
+                                .paddingSmall()
+                                .weight(1f),
+                        )
+                        CustomDropdownMenu(
+                            modifier = Modifier
+                                .width(IntrinsicSize.Min)
+                                .paddingSmall(),
+                            selectedItem = state.currency,
+                            items = state.availableCurrencies,
+                            itemFormatter = { it.sign.toString() },
+                            onItemChanged = onCurrencyChanged,
+                        )
+                    }
+                    if (state.isEmptyPriceErrorVisible) {
+                        Text(
+                            text = stringResource(R.string.error_empty_price),
+                            color = LocalCustomColorsPalette.current.error,
+                            modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_small))
+                        )
+                    }
+                }
+            }
+            //Количество
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.amount),
+                    modifier = Modifier
+                        .paddingSmall()
+                        .fillMaxWidth(firstColumnWidthFraction),
+                )
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CustomTextField(
+                        value = state.amountFieldValue,
+                        onValueChange = onAmountTextChanged,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .paddingSmall(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    )
+                    if (state.isEmptyAmountErrorVisible) {
+                        Text(
+                            text = stringResource(R.string.error_empty_amount),
+                            color = LocalCustomColorsPalette.current.error,
+                            modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_small))
+                        )
+                    }
+                    Row {
+                        RadioTextButton(
+                            isSelected = state.amountType == AmountType.Count,
+                            title = stringResource(R.string.radio_count),
+                            modifier = Modifier.weight(1f),
+                            onClick = { onAmountTypeChanged(AmountType.Count) },
+                        )
+                        RadioTextButton(
+                            isSelected = state.amountType == AmountType.Weight,
+                            title = stringResource(R.string.radio_weigth),
+                            modifier = Modifier.weight(1f),
+                            onClick = { onAmountTypeChanged(AmountType.Weight) },
+                        )
+                    }
+                }
+            }
+            //Товар
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.product),
+                    modifier = Modifier
+                        .paddingSmall()
+                        .fillMaxWidth(firstColumnWidthFraction),
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(IntrinsicSize.Min)
+                ) {
+                    CustomDropdownMenu(
+                        modifier = Modifier
+                            .paddingSmall(),
+                        selectedItem = state.product,
+                        items = state.availableProducts,
+                        itemFormatter = {
+                            it?.name ?: stringResource(R.string.product_empty_placeholder)
+                        },
+                        onItemChanged = onProductChanged,
+                        isEnabled = state.isProductDropdownEnabled,
+                    ) { product ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .paddingSmall(),
+                                text = product?.name
+                                    ?: stringResource(R.string.product_empty_placeholder),
+                            )
+                            product?.let {
+                                IconButton(onClick = {
+                                    onProductDeleteClick(product)
+                                }) {
+                                    Icon(Icons.Filled.Delete, contentDescription = null)
+                                }
+                            }
+                        }
+                    }
+                    if (state.isEmptyProductErrorVisible) {
+                        Text(
+                            text = stringResource(R.string.error_empty_product),
+                            color = LocalCustomColorsPalette.current.error,
+                            modifier = Modifier.padding(start = dimensionResource(R.dimen.padding_small))
+                        )
+                    }
+                }
+                IconButton(
+                    modifier = Modifier.paddingSmall(),
+                    onClick = onProductAddClick,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AddCircle,
+                        contentDescription = "add spending product",
+                    )
+                }
+            }
+            //Магазин
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.shop),
+                    modifier = Modifier
+                        .paddingSmall()
+                        .fillMaxWidth(firstColumnWidthFraction),
+                )
+                CustomDropdownMenu(
+                    modifier = Modifier
+                        .weight(1f)
+                        .paddingSmall(),
+                    selectedItem = state.shop,
+                    items = state.availableShops,
+                    itemFormatter = { it?.name ?: stringResource(R.string.shop_empty_placeholder) },
+                    onItemChanged = onShopChanged,
+                    isEnabled = state.isShopDropdownEnabled,
+                ) { shop ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .weight(1f)
+                                .paddingSmall(),
+                            text = shop?.name ?: stringResource(R.string.shop_empty_placeholder),
+                        )
+                        shop?.let {
+                            IconButton(onClick = {
+                                onShopDeleteClick(shop)
+                            }) {
+                                Icon(Icons.Filled.Delete, contentDescription = null)
+                            }
+                        }
+                    }
+                }
+                IconButton(
+                    modifier = Modifier.paddingSmall(),
+                    onClick = onShopAddClick,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AddCircle,
+                        contentDescription = "add spending shop",
+                    )
+                }
+            }
+            //Комментарий
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.comment),
+                    modifier = Modifier
+                        .paddingSmall()
+                        .fillMaxWidth(firstColumnWidthFraction),
+                )
                 CustomTextField(
-                    value = state.amountFieldValue,
-                    onValueChange = currentOnAmountTextChanged,
+                    value = state.comment,
+                    onValueChange = onCommentChanged,
                     modifier = Modifier
                         .fillMaxWidth()
                         .paddingSmall(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                )
-                Row {
-                    RadioTextButton(
-                        isSelected = state.amountType == AmountType.Count,
-                        title = stringResource(R.string.radio_count),
-                        modifier = Modifier.weight(1f),
-                        onClick = { currentOnAmountTypeChanged(AmountType.Count) },
-                    )
-                    RadioTextButton(
-                        isSelected = state.amountType == AmountType.Weight,
-                        title = stringResource(R.string.radio_weigth),
-                        modifier = Modifier.weight(1f),
-                        onClick = { currentOnAmountTypeChanged(AmountType.Weight) },
-                    )
-                }
-            }
-        }
-        //Товар
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.product),
-                modifier = Modifier
-                    .paddingSmall()
-                    .fillMaxWidth(firstColumnWidthFraction),
-            )
-            CustomDropdownMenu(
-                modifier = Modifier
-                    .weight(1f)
-                    .paddingSmall(),
-                selectedItem = state.product,
-                items = state.availableProducts,
-                itemFormatter = { it?.name ?: stringResource(R.string.product_empty_placeholder) },
-                onItemChanged = currentOnProductChanged,
-                isEnabled = state.isProductDropdownEnabled,
-            ) { product ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .weight(1f)
-                            .paddingSmall(),
-                        text = product?.name ?: stringResource(R.string.product_empty_placeholder),
-                    )
-                    product?.let {
-                        IconButton(onClick = {
-                            currentOnProductDeleteClick(product)
-                        }) {
-                            Icon(Icons.Filled.Delete, contentDescription = null)
-                        }
-                    }
-                }
-            }
-            IconButton(
-                modifier = Modifier.paddingSmall(),
-                onClick = currentOnProductAddClick,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.AddCircle,
-                    contentDescription = "add spending product",
                 )
             }
         }
-        //Магазин
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Button(
+            onClick = onSaveClick,
+            modifier = Modifier
+                .paddingSmall()
+                .fillMaxWidth()
         ) {
-            Text(
-                text = stringResource(R.string.shop),
-                modifier = Modifier
-                    .paddingSmall()
-                    .fillMaxWidth(firstColumnWidthFraction),
-            )
-            CustomDropdownMenu(
-                modifier = Modifier
-                    .weight(1f)
-                    .paddingSmall(),
-                selectedItem = state.shop,
-                items = state.availableShops,
-                itemFormatter = { it?.name ?: stringResource(R.string.shop_empty_placeholder) },
-                onItemChanged = currentOnShopChanged,
-                isEnabled = state.isShopDropdownEnabled,
-            ) { shop ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .weight(1f)
-                            .paddingSmall(),
-                        text = shop?.name ?: stringResource(R.string.shop_empty_placeholder),
-                    )
-                    shop?.let {
-                        IconButton(onClick = {
-                            currentOnShopDeleteClick(shop)
-                        }) {
-                            Icon(Icons.Filled.Delete, contentDescription = null)
-                        }
-                    }
-                }
-            }
-            IconButton(
-                modifier = Modifier.paddingSmall(),
-                onClick = currentOnShopAddClick,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.AddCircle,
-                    contentDescription = "add spending shop",
-                )
-            }
-        }
-        //Комментарий
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.comment),
-                modifier = Modifier
-                    .paddingSmall()
-                    .fillMaxWidth(firstColumnWidthFraction),
-            )
-            CustomTextField(
-                value = state.comment,
-                onValueChange = currentOnCommentChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .paddingSmall(),
-            )
+            Text(stringResource(R.string.save))
         }
     }
 }
@@ -498,6 +546,21 @@ private fun RenderSpendCardViewModel(
 @Preview
 @Composable
 fun PreviewSpendCardScreen_Default() {
+    PreviewSpendCardScreen(
+        showAllErrors = false,
+    )
+}
+
+@Preview
+@Composable
+fun PreviewSpendCardScreen_Errors() {
+    PreviewSpendCardScreen(
+        showAllErrors = true,
+    )
+}
+
+@Composable
+private fun PreviewSpendCardScreen(showAllErrors: Boolean) {
     HousekeeperTheme {
         Surface {
             RenderSpendCardViewModel(
@@ -515,7 +578,11 @@ fun PreviewSpendCardScreen_Default() {
                     isShopDropdownEnabled = false,
                     shop = null,
                     availableShops = emptyImmutableList(),
-                    comment = TextFieldValue()
+                    comment = TextFieldValue(),
+
+                    isEmptyPriceErrorVisible = showAllErrors,
+                    isEmptyAmountErrorVisible = showAllErrors,
+                    isEmptyProductErrorVisible = showAllErrors,
                 ),
             )
         }

@@ -22,4 +22,8 @@ data class SpendCardState(
     val shop: Shop?,
     val availableShops: ImmutableList<Shop>,
     val comment: TextFieldValue,
+
+    val isEmptyPriceErrorVisible: Boolean,
+    val isEmptyAmountErrorVisible: Boolean,
+    val isEmptyProductErrorVisible: Boolean,
 )

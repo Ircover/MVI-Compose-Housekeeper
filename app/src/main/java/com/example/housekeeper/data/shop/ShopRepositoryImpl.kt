@@ -25,6 +25,4 @@ class ShopRepositoryImpl(
     override fun getShops(): Flow<List<Shop>> =
         shopDao.getAll()
             .map { it.map { it.toShop() } }
-
-    private fun DataShop.toShop() = Shop(name)
 }

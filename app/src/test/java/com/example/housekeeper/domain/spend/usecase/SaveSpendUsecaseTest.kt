@@ -42,7 +42,7 @@ class SaveSpendUsecaseTest {
 
     @Test
     fun invoke_existingSpend_default(): Unit = runBlocking {
-        val id = 1
+        val id = 1L
         val spend = generateSpend(id)
         whenever(spendRepository.isSpendExists(id)).thenReturn(true)
         whenever(spendRepository.save(spend)).thenReturn(Result.success(spend))
@@ -55,7 +55,7 @@ class SaveSpendUsecaseTest {
 
     @Test
     fun invoke_existingSpend_doesNotExist(): Unit = runBlocking {
-        val id = 1
+        val id = 1L
         val spend = generateSpend(id)
         whenever(spendRepository.isSpendExists(id)).thenReturn(false)
 
@@ -76,7 +76,7 @@ class SaveSpendUsecaseTest {
         assertEquals(SaveSpendResult.UnknownError(error), result)
     }
 
-    private fun generateSpend(id: Int = EMPTY_ID) = Spend(
+    private fun generateSpend(id: Long = EMPTY_ID) = Spend(
         id = id,
         dateMillis = 1L,
         price = 12F,

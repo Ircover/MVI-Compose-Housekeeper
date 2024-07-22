@@ -25,6 +25,4 @@ class ProductRepositoryImpl(
     override fun getProducts(): Flow<List<Product>> =
         productDao.getAll()
             .map { it.map { it.toProduct() } }
-
-    private fun DataProduct.toProduct() = Product(name)
 }

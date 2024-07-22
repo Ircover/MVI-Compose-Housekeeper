@@ -2,7 +2,13 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="ProductDaoTests">
+      <entry key="SpendDaoTests">
+        <State />
+      </entry>
+      <entry key="SpendDataTests">
+        <State />
+      </entry>
+      <entry key="Tests in 'com.example.housekeeper.data'">
         <State />
       </entry>
       <entry key="app">

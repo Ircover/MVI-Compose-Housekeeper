@@ -6,7 +6,7 @@ import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.domain.shop.Shop
 
 data class Spend(
-    val id: Int,
+    val id: Long,
     val dateMillis: Long,
     val price: Float,
     val currency: Currency,

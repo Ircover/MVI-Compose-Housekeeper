@@ -21,6 +21,7 @@ import com.example.housekeeper.presentation.UserMessage
 import com.example.housekeeper.presentation.UserMessageLevel
 import com.example.housekeeper.presentation.UserMessageShowDuration
 import com.example.housekeeper.presentation.emptyImmutableList
+import com.example.housekeeper.presentation.spend_card.SpendCardSideEffect.ChangeLoadingVisibility
 import com.example.housekeeper.presentation.toImmutable
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.ContainerHost
@@ -187,14 +188,10 @@ class SpendCardViewModel(
 
     private inline fun addProductIntentWithIndicator(
         crossinline action: suspend SimpleSyntax<SpendCardState, SpendCardSideEffect>.() -> Unit
-    ) = intent {
-        postSideEffect(SpendCardSideEffect.ChangeAddProductDialogLoading(true))
-        try {
-            action()
-        } finally {
-            postSideEffect(SpendCardSideEffect.ChangeAddProductDialogLoading(false))
-        }
-    }
+    ) = launchActionWithIndicator(
+        sideEffectProvider = { ChangeLoadingVisibility.ChangeAddProductDialogLoading(it) },
+        action = action,
+    )
 
     private fun deleteProduct(product: Product) = intent {
         postSideEffect(
@@ -255,14 +252,10 @@ class SpendCardViewModel(
 
     private inline fun addShopIntentWithIndicator(
         crossinline action: suspend SimpleSyntax<SpendCardState, SpendCardSideEffect>.() -> Unit
-    ) = intent {
-        postSideEffect(SpendCardSideEffect.ChangeAddShopDialogLoading(true))
-        try {
-            action()
-        } finally {
-            postSideEffect(SpendCardSideEffect.ChangeAddShopDialogLoading(false))
-        }
-    }
+    ) = launchActionWithIndicator(
+        sideEffectProvider = { ChangeLoadingVisibility.ChangeAddShopDialogLoading(it) },
+        action = action,
+    )
 
     private fun deleteShop(shop: Shop) = intent {
         postSideEffect(
@@ -294,15 +287,9 @@ class SpendCardViewModel(
     private fun save() = intent {
         val isSpendValid = checkPrice() and checkAmount() and checkProduct()
         if (isSpendValid) {
-            postSideEffect(
-                SpendCardSideEffect.ShowMessage(
-                    UserMessage(
-                        R.string.not_implemented,
-                        UserMessageLevel.Info,
-                        UserMessageShowDuration.Short,
-                    )
-                )
-            )
+            saveSpendWithIndicator {
+
+            }
         } else {
             postSideEffect(
                 SpendCardSideEffect.ShowMessage(
@@ -339,6 +326,25 @@ class SpendCardViewModel(
         }
         return isValid
     }
+
+    private inline fun saveSpendWithIndicator(
+        crossinline action: suspend SimpleSyntax<SpendCardState, SpendCardSideEffect>.() -> Unit
+    ) = launchActionWithIndicator(
+        sideEffectProvider = { ChangeLoadingVisibility.ChangeGlobalLoading(it) },
+        action = action,
+    )
+
+    private inline fun <reified T: ChangeLoadingVisibility> launchActionWithIndicator(
+        crossinline sideEffectProvider: (Boolean) -> T,
+        crossinline action: suspend SimpleSyntax<SpendCardState, SpendCardSideEffect>.() -> Unit
+    ) = intent {
+        postSideEffect(sideEffectProvider(true))
+        try {
+            action()
+        } finally {
+            postSideEffect(sideEffectProvider(false))
+        }
+    }
 }
 
 private fun initState(
@@ -359,6 +365,7 @@ private fun initState(
     shop = null,
     availableShops = emptyImmutableList(),
     comment = TextFieldValue(""),
+
     isEmptyPriceErrorVisible = false,
     isEmptyAmountErrorVisible = false,
     isEmptyProductErrorVisible = false,

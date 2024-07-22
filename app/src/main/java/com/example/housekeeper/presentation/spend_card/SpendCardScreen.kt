@@ -1,6 +1,8 @@
 package com.example.housekeeper.presentation.spend_card
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -54,6 +58,7 @@ import com.example.housekeeper.presentation.composable.DateTextField
 import com.example.housekeeper.presentation.composable.PriceTextField
 import com.example.housekeeper.presentation.composable.RadioTextButton
 import com.example.housekeeper.presentation.emptyImmutableList
+import com.example.housekeeper.presentation.spend_card.SpendCardSideEffect.ChangeLoadingVisibility
 import com.example.housekeeper.presentation.utils.CustomSnackbarHost
 import com.example.housekeeper.presentation.utils.collectState
 import com.example.housekeeper.presentation.utils.paddingSmall
@@ -187,6 +192,7 @@ private fun SpendCardScreen(
     var isAddShopDialogVisible by remember { mutableStateOf(false) }
     var isAddShopDialogLoading by remember { mutableStateOf(false) }
     var isDatePickerDialogVisible by remember { mutableStateOf(false) }
+    var isGlobalLoadingVisible by remember { mutableStateOf(false) }
     val onDateClick: () -> Unit by rememberUpdatedState { isDatePickerDialogVisible = true }
     val coroutineScope = rememberCoroutineScope()
 
@@ -206,11 +212,14 @@ private fun SpendCardScreen(
             }
             SpendCardSideEffect.ShowAddProductDialog -> isAddProductDialogVisible = true
             SpendCardSideEffect.HideAddProductDialog -> isAddProductDialogVisible = false
-            is SpendCardSideEffect.ChangeAddProductDialogLoading -> {
+            is ChangeLoadingVisibility.ChangeAddProductDialogLoading -> {
                 isAddProductDialogLoading = it.isLoading
             }
-            is SpendCardSideEffect.ChangeAddShopDialogLoading -> {
+            is ChangeLoadingVisibility.ChangeAddShopDialogLoading -> {
                 isAddShopDialogLoading = it.isLoading
+            }
+            is ChangeLoadingVisibility.ChangeGlobalLoading -> {
+                isGlobalLoadingVisible = it.isLoading
             }
             SpendCardSideEffect.HideAddShopDialog -> isAddShopDialogVisible = false
             SpendCardSideEffect.ShowAddShopDialog -> isAddShopDialogVisible = true
@@ -225,6 +234,7 @@ private fun SpendCardScreen(
     ) {
         RenderSpendCardViewModel(
             state,
+            isGlobalLoadingVisible,
             onPriceChanged = onPriceChanged,
             onCurrencyChanged = onCurrencyChanged,
             onAmountTextChanged = onAmountTextChanged,
@@ -277,6 +287,7 @@ private fun SpendCardScreen(
 @Composable
 private fun RenderSpendCardViewModel(
     state: SpendCardState,
+    isGlobalLoadingVisible: Boolean,
     onPriceChanged: (TextFieldValue) -> Unit = { },
     onCurrencyChanged: (Currency) -> Unit = { },
     onAmountTextChanged: (TextFieldValue) -> Unit = { },
@@ -541,14 +552,22 @@ private fun RenderSpendCardViewModel(
             Text(stringResource(R.string.save))
         }
     }
+    if (isGlobalLoadingVisible) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colorResource(R.color.shadowedBackground))
+        ) {
+            CircularProgressIndicator()
+        }
+    }
 }
 
 @Preview
 @Composable
 fun PreviewSpendCardScreen_Default() {
-    PreviewSpendCardScreen(
-        showAllErrors = false,
-    )
+    PreviewSpendCardScreen()
 }
 
 @Preview
@@ -559,8 +578,19 @@ fun PreviewSpendCardScreen_Errors() {
     )
 }
 
+@Preview
 @Composable
-private fun PreviewSpendCardScreen(showAllErrors: Boolean) {
+fun PreviewSpendCardScreen_GlobalLoading() {
+    PreviewSpendCardScreen(
+        isGlobalLoadingVisible = true,
+    )
+}
+
+@Composable
+private fun PreviewSpendCardScreen(
+    showAllErrors: Boolean = false,
+    isGlobalLoadingVisible: Boolean = false,
+) {
     HousekeeperTheme {
         Surface {
             RenderSpendCardViewModel(
@@ -584,6 +614,7 @@ private fun PreviewSpendCardScreen(showAllErrors: Boolean) {
                     isEmptyAmountErrorVisible = showAllErrors,
                     isEmptyProductErrorVisible = showAllErrors,
                 ),
+                isGlobalLoadingVisible = isGlobalLoadingVisible,
             )
         }
     }

@@ -9,6 +9,7 @@ import com.example.housekeeper.domain.product.usecase.AddProductUsecase
 import com.example.housekeeper.domain.product.usecase.GetProductsUsecase
 import com.example.housekeeper.domain.shop.usecase.AddShopUsecase
 import com.example.housekeeper.domain.shop.usecase.GetShopsUsecase
+import com.example.housekeeper.domain.spend.usecase.SaveSpendUsecase
 import com.example.housekeeper.presentation.spend_card.SpendCardViewModel
 import com.example.housekeeper.presentation.spending.SpendingViewModel
 
@@ -18,6 +19,7 @@ class ViewModelsProvider(
     private val getProductsUsecase: GetProductsUsecase,
     private val addShopUsecase: AddShopUsecase,
     private val getShopsUsecase: GetShopsUsecase,
+    private val saveSpendUsecase: SaveSpendUsecase,
     private val dateManager: DateManager,
 ) {
     val factory = viewModelFactory {
@@ -28,6 +30,7 @@ class ViewModelsProvider(
                 getProductsUsecase,
                 addShopUsecase,
                 getShopsUsecase,
+                saveSpendUsecase,
                 navManager,
                 dateManager,
             )

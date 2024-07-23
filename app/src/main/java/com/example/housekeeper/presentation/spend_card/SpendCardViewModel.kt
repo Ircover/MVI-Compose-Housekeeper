@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.housekeeper.R
 import com.example.housekeeper.domain.Currency
+import com.example.housekeeper.domain.EMPTY_ID
 import com.example.housekeeper.domain.product.AmountType
 import com.example.housekeeper.domain.product.Product
 import com.example.housekeeper.domain.product.usecase.AddProductResult
@@ -15,6 +16,9 @@ import com.example.housekeeper.domain.shop.Shop
 import com.example.housekeeper.domain.shop.usecase.AddShopResult
 import com.example.housekeeper.domain.shop.usecase.AddShopUsecase
 import com.example.housekeeper.domain.shop.usecase.GetShopsUsecase
+import com.example.housekeeper.domain.spend.Spend
+import com.example.housekeeper.domain.spend.usecase.SaveSpendResult
+import com.example.housekeeper.domain.spend.usecase.SaveSpendUsecase
 import com.example.housekeeper.presentation.DateManager
 import com.example.housekeeper.presentation.NavManager
 import com.example.housekeeper.presentation.UserMessage
@@ -23,7 +27,9 @@ import com.example.housekeeper.presentation.UserMessageShowDuration
 import com.example.housekeeper.presentation.emptyImmutableList
 import com.example.housekeeper.presentation.spend_card.SpendCardSideEffect.ChangeLoadingVisibility
 import com.example.housekeeper.presentation.toImmutable
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.SimpleSyntax
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -36,7 +42,8 @@ class SpendCardViewModel(
     getProductsUsecase: GetProductsUsecase,
     private val addShopUsecase: AddShopUsecase,
     getShopsUsecase: GetShopsUsecase,
-    navManager: NavManager,
+    private val saveSpendUsecase: SaveSpendUsecase,
+    private val navManager: NavManager,
     private val dateManager: DateManager,
 ) : ContainerHost<SpendCardState, SpendCardSideEffect>, ViewModel() {
     override val container = container<SpendCardState, SpendCardSideEffect>(
@@ -180,7 +187,10 @@ class SpendCardViewModel(
             is AddProductResult.Success -> {
                 postSideEffect(SpendCardSideEffect.HideAddProductDialog)
                 reduce {
-                    state.copy(product = result.product)
+                    state.copy(
+                        product = result.product,
+                        isEmptyProductErrorVisible = false,
+                    )
                 }
             }
         }
@@ -288,7 +298,45 @@ class SpendCardViewModel(
         val isSpendValid = checkPrice() and checkAmount() and checkProduct()
         if (isSpendValid) {
             saveSpendWithIndicator {
-
+                val spendToSave = Spend(
+                    id = EMPTY_ID,
+                    dateMillis = state.dateMillis,
+                    price = state.priceFieldValue.text.toFloat(),
+                    currency = state.currency,
+                    amount = state.amountFieldValue.text.toInt(),
+                    amountType = state.amountType,
+                    product = state.product!!,
+                    shop = state.shop,
+                    comment = state.comment.text,
+                )
+                val result = saveSpendUsecase(spendToSave)
+                when (result) {
+                    SaveSpendResult.NotExistingSpendError, is SaveSpendResult.UnknownError -> {
+                        postSideEffect(
+                            SpendCardSideEffect.ShowMessage(
+                                UserMessage(
+                                    R.string.error_unknown,
+                                    UserMessageLevel.Error,
+                                    UserMessageShowDuration.Short,
+                                )
+                            )
+                        )
+                    }
+                    SaveSpendResult.Success -> {
+                        postSideEffect(//TODO: перенести на другой экран
+                            SpendCardSideEffect.ShowMessage(
+                                UserMessage(
+                                    R.string.save_success,
+                                    UserMessageLevel.Success,
+                                    UserMessageShowDuration.Short,
+                                )
+                            )
+                        )
+                        withContext(Dispatchers.Main) {
+                            navManager.goBack()
+                        }
+                    }
+                }
             }
         } else {
             postSideEffect(
